@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/xeihtt/robotica/chocachoca/cmake_install.cmake",
+		"/home/xeihtt/robotica/chocachoca/generated/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

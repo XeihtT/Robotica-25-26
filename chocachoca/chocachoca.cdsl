@@ -1,15 +1,15 @@
-import "Laser.idsl";
-import "DifferentialRobot.idsl";
+import "Lidar3D.idsl";
+import "OmniRobot.idsl";
 
 Component chocachoca
 {
-    Communications
-    {
-        requires Laser, DifferentialRobot;
-    };
-    language Cpp11;
-    gui Qt(QWidget);
-    //options dsr;
+   Communications
+   {
+       requires Lidar3D, OmniRobot;
+   };
+   language Cpp11;
+   gui Qt(QWidget);
 
 };
+
 
