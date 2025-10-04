@@ -1085,4 +1085,7 @@ generated/CMakeFiles/chocachoca.dir/chocachoca_autogen/mocs_compilation.cpp.o: \
  /usr/include/x86_64-linux-gnu/qt6/QtGui/QScreen \
  /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/VNU7RW3YIC/moc_specificworker.cpp \
  /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/VNU7RW3YIC/../../../src/specificworker.h \
- /home/xeihtt/robotica/chocachoca/generated/genericworker.h
+ /home/xeihtt/robotica/chocachoca/generated/genericworker.h \
+ /home/xeihtt/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.h \
+ /usr/include/c++/13/ranges /usr/local/include/webots/Robot.hpp \
+ /usr/local/include/webots/../../c/webots/types.h

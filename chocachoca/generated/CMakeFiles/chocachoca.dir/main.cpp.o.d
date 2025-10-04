@@ -1273,4 +1273,20 @@ generated/CMakeFiles/chocachoca.dir/main.cpp.o: \
  /home/xeihtt/robotica/chocachoca/generated/Lidar3D.h \
  /home/xeihtt/robotica/chocachoca/generated/OmniRobot.h \
  /home/xeihtt/robotica/chocachoca/generated/../src/specificworker.h \
- /home/xeihtt/robotica/chocachoca/generated/genericworker.h
+ /home/xeihtt/robotica/chocachoca/generated/genericworker.h \
+ /home/xeihtt/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.h \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QWidget \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QGraphicsScene \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QGraphicsView \
+ /usr/include/x86_64-linux-gnu/qt6/QtGui/QMouseEvent \
+ /usr/include/x86_64-linux-gnu/qt6/QtGui/QResizeEvent \
+ /usr/include/x86_64-linux-gnu/qt6/QtOpenGLWidgets/QOpenGLWidget \
+ /usr/include/x86_64-linux-gnu/qt6/QtOpenGLWidgets/qopenglwidget.h \
+ /usr/include/x86_64-linux-gnu/qt6/QtOpenGLWidgets/qtopenglwidgetsglobal.h \
+ /usr/include/x86_64-linux-gnu/qt6/QtOpenGLWidgets/qtopenglwidgetsexports.h \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QScrollBar \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QApplication \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QVBoxLayout \
+ /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QGraphicsPolygonItem \
+ /usr/include/c++/13/ranges /usr/local/include/webots/Robot.hpp \
+ /usr/local/include/webots/../../c/webots/types.h

@@ -13,9 +13,12 @@ chocachoca_autogen/timestamp: \
 	/home/xeihtt/robocomp/cmake/robocomp.cmake \
 	/home/xeihtt/robocomp/core/classes/ConfigLoader/ConfigLoader.h \
 	/home/xeihtt/robocomp/core/classes/ConfigLoader/ConfigLoader.tpp \
+	/home/xeihtt/robocomp/core/classes/abstract_graphic_viewer/abstract_graphic_viewer.h \
 	/home/xeihtt/robocomp/core/classes/grafcetStep/GRAFCETStep.h \
 	/home/xeihtt/robotica/chocachoca/generated/CMakeLists.txt \
 	/home/xeihtt/robotica/chocachoca/generated/GenericBase.h \
+	/home/xeihtt/robotica/chocachoca/generated/Lidar3D.h \
+	/home/xeihtt/robotica/chocachoca/generated/OmniRobot.h \
 	/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
 	/home/xeihtt/robotica/chocachoca/generated/genericworker.cpp \
 	/home/xeihtt/robotica/chocachoca/generated/genericworker.h \
@@ -279,8 +282,10 @@ chocachoca_autogen/timestamp: \
 	/usr/include/c++/13/pstl/glue_memory_defs.h \
 	/usr/include/c++/13/pstl/glue_numeric_defs.h \
 	/usr/include/c++/13/random \
+	/usr/include/c++/13/ranges \
 	/usr/include/c++/13/ratio \
 	/usr/include/c++/13/set \
+	/usr/include/c++/13/span \
 	/usr/include/c++/13/sstream \
 	/usr/include/c++/13/stdexcept \
 	/usr/include/c++/13/streambuf \
@@ -1105,6 +1110,8 @@ chocachoca_autogen/timestamp: \
 	/usr/local/include/toml++/impl/yaml_formatter.inl \
 	/usr/local/include/toml++/toml.h \
 	/usr/local/include/toml++/toml.hpp \
+	/usr/local/webots/include/controller/c/webots/types.h \
+	/usr/local/webots/include/controller/cpp/webots/Robot.hpp \
 	/usr/share/cmake-3.28/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake \
 	/usr/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake \
 	/usr/share/cmake-3.28/Modules/CheckCSourceCompiles.cmake \

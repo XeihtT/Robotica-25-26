@@ -32,7 +32,9 @@
 //#define HIBERNATION_ENABLED
 
 #include <genericworker.h>
-
+#include <abstract_graphic_viewer/abstract_graphic_viewer.h>
+#include <ranges>
+#include <webots/Robot.hpp>
 
 /**
  * \brief Class SpecificWorker implements the core functionality of the component.
@@ -56,6 +58,12 @@ public:
 
 
 public slots:
+
+	//Chocachoca
+	void new_target_slot(QPointF);
+
+	//Chocachoca
+	void draw_lidar(const std::vector<RoboCompLidar3D::TPoint>& filter_data, QGraphicsScene* scene);
 
 	/**
 	 * \brief Initializes the worker one time.
@@ -89,6 +97,14 @@ private:
      * \brief Flag indicating whether startup checks are enabled.
      */
 	bool startup_check_flag;
+	// graphics
+
+	QRectF dimensions;
+	QWidget* frame;
+	AbstractGraphicViewer *viewer;
+	const int ROBOT_LENGTH = 400;
+	QGraphicsPolygonItem *robot_polygon;
+
 
 signals:
 	//void customSignal();
