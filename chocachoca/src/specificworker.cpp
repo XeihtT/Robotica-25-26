@@ -17,6 +17,7 @@
  *    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "specificworker.h"
+#include "cppitertools/itertools.hpp"
 
 SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx)
 {
@@ -100,6 +101,9 @@ void SpecificWorker::compute()
 		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 5000, 3); float epsilon=0.01f; //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		qInfo() << data.points.size();
 
+		auto min1 = std::min(data.points.begin(), data.points.end(), [](const auto& p1, const auto& p2){return p1->distance2d < p2->distance2d;});
+		float minglobal=min1->distance2d;
+
 		std::unordered_map<int, std::vector<RoboCompLidar3D::TPoint>> pts_filtrados;
 		std::ranges::for_each(data.points, [&](const RoboCompLidar3D::TPoint& p) {pts_filtrados[static_cast<int>(std::floor(p.theta/epsilon))].push_back(p);});//los agrupamos por misma theta
 		std::vector<RoboCompLidar3D::TPoint>filter_data; filter_data.reserve(pts_filtrados.size()); //preparamos el filter_data
@@ -115,6 +119,7 @@ void SpecificWorker::compute()
 			//primera--;
 			for (const auto& p: filter_data) {
 				qDebug()<<"dist: "<<p.distance2d;
+				qDebug()<<"dist2: "<<minglobal;
 			}
 		}
 	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl;}
