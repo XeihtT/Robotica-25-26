@@ -91,27 +91,41 @@ void SpecificWorker::initialize()
 
 void SpecificWorker::compute()
 {
-	try {
-		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
-		//qInfo() << data.points.size();
-		if (data.points.empty()){qWarning()<<"No points"; return;}
 
-		const auto filter_data=filter_min_distance_cppitertools(data.points);
-		//qDebug()<<filter_data.value().size();
+	int size; std::size_t start, end;
+	std::optional<RoboCompLidar3D::TPoints> filter_data;
+		try {
+			auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+			//qInfo() << data.points.size();
+			if (data.points.empty()){qWarning()<<"No points"; return;}
 
-		if (filter_data.has_value())
-			draw_lidar(filter_data.value(), &viewer->scene);
+			filter_data=filter_min_distance_cppitertools(data.points);
+			//qDebug()<<filter_data.value().size();
 
-		auto min = std::min_element(filter_data.value().begin(), filter_data.value().end(), [](const auto& a, const auto& b){return a.r < b.r;});
-		qDebug()<<min->r;
-		/*
-		if (min->r < 220) {
-			qDebug()<<"Retorno por estar cerca de la pared";
-			return;
-		}
-		*/
+			auto data2=filter_data.value();
+			if (filter_data.has_value())
+				draw_lidar(filter_data.value(), &viewer->scene);
 
-	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return;}
+			int size=data2.size();
+
+		}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return;}
+
+		size=filter_data.value().size()/2;
+		start = filter_data.value().size()/2 - 5;
+		end   = filter_data.value().size()/2 + 5;
+
+		auto view = std::ranges::subrange(filter_data.value().begin() + start, filter_data.value().begin() + end);
+		auto min_point=std::min_element(view.begin(), view.end(), [](const auto& a, const auto& b){return a.r<b.r;});
+		//sino, hacerlo con sort y cogiendo at(6)
+	if (min_point->r < 220) {
+		try {
+			float velX, velZ, rot;
+			velX=0; velZ=0; rot=0.5;
+			omnirobot_proxy->setSpeedBase(velX, velZ, rot);
+		}catch (Ice::Exception &e){std::cout<<e.what()<<std::endl; return;}
+	}
+
+
 }
 
 
@@ -180,7 +194,7 @@ std::optional<RoboCompLidar3D::TPoints> SpecificWorker::filter_min_distance_cppi
 	for (auto&& [angle, group]: iter::groupby(points, [](const auto& p)
 	{ float multiplier=std::pow(10.0f, 2); return std::floor(p.phi*multiplier)/multiplier;})) {
 		auto min=std::min_element(std::begin(group), std::end(group), [](const auto& a, const auto& b){return a.r<b.r;});
-		result.emplace_back(RoboCompLidar3D::TPoint{.x=min->x, .y=min->y, .z=min->z, .phi=min->phi});
+		result.emplace_back(*min);
 	}
 	return result;
 }
