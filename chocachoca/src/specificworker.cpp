@@ -71,10 +71,6 @@ void SpecificWorker::initialize()
 
     //initializeCODE
 
-	this->frame = new QWidget();
-	this->frame->setWindowTitle("Viewer Frame");
-	this->frame->resize(1000,600);
-	this->frame->show();
 
 	this->dimensions = QRectF(-6000, -3000, 12000, 6000);
 	viewer = new AbstractGraphicViewer(this->frame, this->dimensions);
@@ -95,34 +91,27 @@ void SpecificWorker::initialize()
 
 void SpecificWorker::compute()
 {
-	static int primera=5;
-
 	try {
-		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 5000, 3); float epsilon=0.01f; //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
-		qInfo() << data.points.size();
+		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+		//qInfo() << data.points.size();
+		if (data.points.empty()){qWarning()<<"No points"; return;}
 
-		auto min1 = std::min(data.points.begin(), data.points.end(), [](const auto& p1, const auto& p2){return p1->distance2d < p2->distance2d;});
-		float minglobal=min1->distance2d;
+		const auto filter_data=filter_min_distance_cppitertools(data.points);
+		//qDebug()<<filter_data.value().size();
 
-		std::unordered_map<int, std::vector<RoboCompLidar3D::TPoint>> pts_filtrados;
-		std::ranges::for_each(data.points, [&](const RoboCompLidar3D::TPoint& p) {pts_filtrados[static_cast<int>(std::floor(p.theta/epsilon))].push_back(p);});//los agrupamos por misma theta
-		std::vector<RoboCompLidar3D::TPoint>filter_data; filter_data.reserve(pts_filtrados.size()); //preparamos el filter_data
-		std::ranges::for_each(pts_filtrados, [&](auto& p) {auto min= std::min_element(p.second.begin(), p.second.end(), [](const auto& a, const auto& b) {return a.distance2d < b.distance2d;}); filter_data.push_back(*min); p.second={*min} ;});
-		auto min=std::min_element(filter_data.begin(), filter_data.end(), [](const auto& a, const auto& b){return a.distance2d < b.distance2d;});
-		draw_lidar(filter_data, &viewer->scene);
-		if (min->distance2d < 220) {
-			qDebug()<<"Retorno";
+		if (filter_data.has_value())
+			draw_lidar(filter_data.value(), &viewer->scene);
+
+		auto min = std::min_element(filter_data.value().begin(), filter_data.value().end(), [](const auto& a, const auto& b){return a.r < b.r;});
+		qDebug()<<min->r;
+		/*
+		if (min->r < 220) {
+			qDebug()<<"Retorno por estar cerca de la pared";
 			return;
 		}
+		*/
 
-		if (primera>0) {
-			//primera--;
-			for (const auto& p: filter_data) {
-				qDebug()<<"dist: "<<p.distance2d;
-				qDebug()<<"dist2: "<<minglobal;
-			}
-		}
-	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl;}
+	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return;}
 }
 
 
@@ -179,6 +168,34 @@ void SpecificWorker::new_target_slot(QPointF p)
 {
 	std::cout << "Nuevo target recibido en: ("
 			  << p.x() << ", " << p.y() << ")" << std::endl;
+}
+
+std::optional<RoboCompLidar3D::TPoints> SpecificWorker::filter_min_distance_cppitertools(const RoboCompLidar3D::TPoints& points) {
+
+	if (points.empty())
+		return {};
+
+	RoboCompLidar3D::TPoints result; result.reserve(points.size());
+
+	for (auto&& [angle, group]: iter::groupby(points, [](const auto& p)
+	{ float multiplier=std::pow(10.0f, 2); return std::floor(p.phi*multiplier)/multiplier;})) {
+		auto min=std::min_element(std::begin(group), std::end(group), [](const auto& a, const auto& b){return a.r<b.r;});
+		result.emplace_back(RoboCompLidar3D::TPoint{.x=min->x, .y=min->y, .z=min->z, .phi=min->phi});
+	}
+	return result;
+}
+
+void SpecificWorker::update_robot_position() {
+	try {
+		RoboCompGenericBase::TBaseState bState;
+		omnirobot_proxy->getBaseState(bState);
+		robot_polygon->setRotation(bState.alpha*100/M_PI);
+		robot_polygon->setPos(bState.x, bState.z);
+		std::cout<<bState.alpha<< " "<<bState.x<<" "<<bState.z<<std::endl;
+
+	}
+	catch (const Ice::Exception& e){std::cout<<e.what();}
+
 }
 
 
