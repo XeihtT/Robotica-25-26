@@ -91,41 +91,21 @@ void SpecificWorker::initialize()
 
 void SpecificWorker::compute()
 {
-
-	int size; std::size_t start, end;
 	std::optional<RoboCompLidar3D::TPoints> filter_data;
-		try {
-			auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
-			//qInfo() << data.points.size();
-			if (data.points.empty()){qWarning()<<"No points"; return;}
+	try {
+		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+		//qInfo() << "Size: "<<data.points.size();
+		if (data.points.empty()){qWarning()<<"No points"; return;}
+		filter_data=filter_min_distance_cppitertools(data.points);
+		auto data2=filter_data.value();
+		if (filter_data.has_value())
+			draw_lidar(filter_data.value(), &viewer->scene);
+		else
+			return; //nos aseguramos de que vamos a llamar a update_robot_state() con valores validos
 
-			filter_data=filter_min_distance_cppitertools(data.points);
-			//qDebug()<<filter_data.value().size();
+	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return;}
 
-			auto data2=filter_data.value();
-			if (filter_data.has_value())
-				draw_lidar(filter_data.value(), &viewer->scene);
-
-			int size=data2.size();
-
-		}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return;}
-
-		size=filter_data.value().size()/2;
-		start = filter_data.value().size()/2 - 5;
-		end   = filter_data.value().size()/2 + 5;
-
-		auto view = std::ranges::subrange(filter_data.value().begin() + start, filter_data.value().begin() + end);
-		auto min_point=std::min_element(view.begin(), view.end(), [](const auto& a, const auto& b){return a.r<b.r;});
-		//sino, hacerlo con sort y cogiendo at(6)
-	if (min_point->r < 220) {
-		try {
-			float velX, velZ, rot;
-			velX=0; velZ=0; rot=0.5;
-			omnirobot_proxy->setSpeedBase(velX, velZ, rot);
-		}catch (Ice::Exception &e){std::cout<<e.what()<<std::endl; return;}
-	}
-
-
+	update_robot_state(filter_data.value());
 }
 
 
@@ -212,7 +192,33 @@ void SpecificWorker::update_robot_position() {
 
 }
 
+void SpecificWorker::update_robot_state(const RoboCompLidar3D::TPoints& filter_data) {
+	static enum class State { ADVANCING, TURNING } state = State::ADVANCING;
 
+	std::size_t start= filter_data.size()/2 - 20;
+	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
+
+	float min_threshold=980; //creo que asi esta bien, aun asi se puede testear
+	auto view = std::ranges::subrange(filter_data.begin() + start, filter_data.begin() + end);
+	auto front_min=std::min_element(view.begin(), view.end(), [](const auto& a, const auto& b){return a.r<b.r;});
+
+	switch (state) {
+		case State::ADVANCING:
+			if (front_min->r<min_threshold) {
+				qDebug()<<"Cambio a giro";
+				omnirobot_proxy->setSpeedBase(0.0, 0.0, 1.5);
+				state = State::TURNING;
+			}
+			break;
+		case State::TURNING:
+			if (front_min->r > 80+min_threshold) { //tengo margen para avanzar
+				qDebug()<<"Cambio a avance";
+				omnirobot_proxy->setSpeedBase(0.0, 10000.0, 0.0);
+				state=State::ADVANCING;
+			}
+			break;
+	}
+}
 
 /**************************************/
 // From the RoboCompLidar3D you can call this methods:

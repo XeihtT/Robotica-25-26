@@ -91,6 +91,8 @@ public slots:
      */
 	int startup_check();
 
+
+
 private:
 
 	/**
@@ -99,11 +101,18 @@ private:
 	bool startup_check_flag;
 	// graphics
 
+	//Chocachoca todo lo de abajo:
 	QRectF dimensions;
-	QWidget* frame;
+
 	AbstractGraphicViewer *viewer;
 	const int ROBOT_LENGTH = 400;
 	QGraphicsPolygonItem *robot_polygon;
+
+
+	std::optional<RoboCompLidar3D::TPoints> filter_min_distance_cppitertools(const RoboCompLidar3D::TPoints& points);
+	void update_robot_position();
+
+	void update_robot_state(const RoboCompLidar3D::TPoints& points);
 
 
 signals:
