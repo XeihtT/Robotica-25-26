@@ -193,7 +193,7 @@ void SpecificWorker::update_robot_position() {
 }
 
 void SpecificWorker::update_robot_state(const RoboCompLidar3D::TPoints& filter_data) {
-	static enum class State { ADVANCING, TURNING } state = State::ADVANCING;
+	static enum class State { FORWARD, WALL, SPIRAL } state = State::FORWARD;
 
 	std::size_t start= filter_data.size()/2 - 20;
 	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
@@ -201,23 +201,27 @@ void SpecificWorker::update_robot_state(const RoboCompLidar3D::TPoints& filter_d
 	float min_threshold=980; //creo que asi esta bien, aun asi se puede testear
 	auto view = std::ranges::subrange(filter_data.begin() + start, filter_data.begin() + end);
 	auto front_min=std::min_element(view.begin(), view.end(), [](const auto& a, const auto& b){return a.r<b.r;});
+	try {
+		switch (state) {
+			case State::FORWARD:
+				if (front_min->r<min_threshold) {
+					qDebug()<<"Cambio a giro";
+					omnirobot_proxy->setSpeedBase(0.0, 0.0, 1.5);
+					state = State::WALL;
+				}
+				break;
+			case State::WALL:
+				if (front_min->r > 80+min_threshold) { //tengo margen para avanzar -> tengo que hacerlo para que quede paralelo
+					qDebug()<<"Cambio a avance";
+					omnirobot_proxy->setSpeedBase(0.0, 10000.0, 0.0);
+					state=State::FORWARD;
+				}
+				break;
 
-	switch (state) {
-		case State::ADVANCING:
-			if (front_min->r<min_threshold) {
-				qDebug()<<"Cambio a giro";
-				omnirobot_proxy->setSpeedBase(0.0, 0.0, 1.5);
-				state = State::TURNING;
-			}
-			break;
-		case State::TURNING:
-			if (front_min->r > 80+min_threshold) { //tengo margen para avanzar
-				qDebug()<<"Cambio a avance";
-				omnirobot_proxy->setSpeedBase(0.0, 10000.0, 0.0);
-				state=State::ADVANCING;
-			}
-			break;
-	}
+			default:
+				break;
+		}
+	}catch (const Ice::Exception& e){std::cout<<e.what();} //necesario puesto que estamos llamando a metodos de setSpeedBase
 }
 
 /**************************************/
