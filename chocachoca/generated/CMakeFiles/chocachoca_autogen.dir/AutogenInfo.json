@@ -7,8 +7,8 @@
 	"CMAKE_LIST_FILES" : 
 	[
 		"/home/xeihtt/robotica/chocachoca/generated/CMakeLists.txt",
-		"/home/xeihtt/robocomp/cmake/robocomp.cmake",
-		"/home/xeihtt/robocomp/cmake/modules/qt.cmake",
+		"/home/robocomp/robocomp/cmake/robocomp.cmake",
+		"/home/robocomp/robocomp/cmake/modules/qt.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6/Qt6ConfigVersion.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6/Qt6ConfigVersionImpl.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6/Qt6Config.cmake",
@@ -220,31 +220,31 @@
 	"HEADERS" : 
 	[
 		[
-			"/home/xeihtt/robocomp/classes/ConfigLoader/ConfigLoader.h",
+			"/home/robocomp/robocomp/classes/ConfigLoader/ConfigLoader.h",
 			"MU",
 			"LZCDZ2OWWR/moc_ConfigLoader.cpp",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.h",
+			"/home/robocomp/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.h",
 			"MU",
 			"EEBIQBSTGR/moc_abstract_graphic_viewer.cpp",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/grafcetStep/GRAFCETStep.h",
+			"/home/robocomp/robocomp/classes/grafcetStep/GRAFCETStep.h",
 			"MU",
 			"2PQVQJTGAJ/moc_GRAFCETStep.cpp",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/rapplication/rapplication.h",
+			"/home/robocomp/robocomp/classes/rapplication/rapplication.h",
 			"MU",
 			"XM3TIXDJID/moc_rapplication.cpp",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/sigwatch/sigwatch.h",
+			"/home/robocomp/robocomp/classes/sigwatch/sigwatch.h",
 			"MU",
 			"RFGDW5AE53/moc_sigwatch.cpp",
 			null
@@ -290,9 +290,9 @@
 		"/opt/robocomp/include",
 		"/classes",
 		"/home/xeihtt/robotica/chocachoca",
-		"/home/xeihtt/robocomp/classes",
-		"/home/xeihtt/robocomp/libs",
-		"/home/xeihtt/robocomp/interfaces",
+		"/home/robocomp/robocomp/classes",
+		"/home/robocomp/robocomp/libs",
+		"/home/robocomp/robocomp/interfaces",
 		"/include",
 		"/usr/include/x86_64-linux-gnu/qt6/QtGui",
 		"/usr/include/x86_64-linux-gnu/qt6",
@@ -348,26 +348,26 @@
 	"SOURCES" : 
 	[
 		[
-			"/home/xeihtt/robocomp/classes/ConfigLoader/ConfigLoader.cpp",
+			"/home/robocomp/robocomp/classes/ConfigLoader/ConfigLoader.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.cpp",
+			"/home/robocomp/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/grafcetStep/GRAFCETStep.cpp",
+			"/home/robocomp/robocomp/classes/grafcetStep/GRAFCETStep.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/xeihtt/robocomp/classes/rapplication/rapplication.cpp",
+			"/home/robocomp/robocomp/classes/rapplication/rapplication.cpp",
 			"MU",
 			null
 		],
-		[ "/home/xeihtt/robocomp/classes/sigwatch/sigwatch.cpp", "MU", null ],
+		[ "/home/robocomp/robocomp/classes/sigwatch/sigwatch.cpp", "MU", null ],
 		[
 			"/home/xeihtt/robotica/chocachoca/generated/genericworker.cpp",
 			"MU",

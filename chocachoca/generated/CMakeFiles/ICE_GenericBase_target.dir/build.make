@@ -68,9 +68,9 @@ include generated/CMakeFiles/ICE_GenericBase_target.dir/progress.make
 
 generated/CMakeFiles/ICE_GenericBase_target: generated/GenericBase.ice
 
-generated/GenericBase.ice: /home/xeihtt/robocomp/interfaces/IDSLs/GenericBase.idsl
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/xeihtt/robotica/chocachoca/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating /home/xeihtt/robotica/chocachoca/generated/GenericBase.ice from /home/xeihtt/robocomp/interfaces/IDSLs/GenericBase.idsl"
-	cd /home/xeihtt/robotica/chocachoca/generated && robocompdsl /home/xeihtt/robocomp/interfaces/IDSLs/GenericBase.idsl /home/xeihtt/robotica/chocachoca/generated/GenericBase.ice
+generated/GenericBase.ice: /home/robocomp/robocomp/interfaces/IDSLs/GenericBase.idsl
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/xeihtt/robotica/chocachoca/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating /home/xeihtt/robotica/chocachoca/generated/GenericBase.ice from /home/robocomp/robocomp//interfaces/IDSLs/GenericBase.idsl"
+	cd /home/xeihtt/robotica/chocachoca/generated && robocompdsl /home/robocomp/robocomp//interfaces/IDSLs/GenericBase.idsl /home/xeihtt/robotica/chocachoca/generated/GenericBase.ice
 
 ICE_GenericBase_target: generated/CMakeFiles/ICE_GenericBase_target
 ICE_GenericBase_target: generated/GenericBase.ice

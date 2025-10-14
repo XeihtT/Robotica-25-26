@@ -1,4 +1,4 @@
-/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/2PQVQJTGAJ/moc_GRAFCETStep.cpp: /home/xeihtt/robocomp/classes/grafcetStep/GRAFCETStep.h \
+/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/2PQVQJTGAJ/moc_GRAFCETStep.cpp: /home/robocomp/robocomp/classes/grafcetStep/GRAFCETStep.h \
   /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \

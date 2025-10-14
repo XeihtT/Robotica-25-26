@@ -1,4 +1,4 @@
-/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/include/moc_sigwatch.cpp: /home/xeihtt/robocomp/classes/sigwatch/sigwatch.h \
+/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/include/moc_sigwatch.cpp: /home/robocomp/robocomp/classes/sigwatch/sigwatch.h \
   /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
