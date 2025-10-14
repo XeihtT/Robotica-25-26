@@ -3,6 +3,9 @@ CMakeFiles/
 CMakeCache.txt
 CMakeLists.txt
 Makefile
+.idea
+.qt
+cmake_install.cmake
 *.o
 *.so
 *.a
