@@ -104,7 +104,7 @@ private:
      * \brief Flag indicating whether startup checks are enabled.
      */
 	bool startup_check_flag;
-	State state = State::FORWARD;
+	State state = State::SPIRAL;
 	// graphics
 
 	//Chocachoca todo lo de abajo:

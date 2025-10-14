@@ -267,8 +267,39 @@ std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCom
 
 }
 
-std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLidar3D::TPoints& points) {
+std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLidar3D::TPoints& filter_data) {
 	//TODO
+	std::size_t start= filter_data.size()/2 - 20;
+	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
+
+
+	float min_threshold=980;
+	auto front_min=std::min_element(filter_data.begin()+start, filter_data.begin()+end, [](const auto& a, const auto& b){return a.r<b.r;});
+	// variables estáticas o de clase para mantener el estado entre llamadas
+	static float v = 200.0f;   // velocidad lineal inicial
+	static float w = 1.5f;   // velocidad angular inicial (rad/s)
+
+	// incrementos/decrementos
+	const float dv = 10.0f;  // cuánto aumenta la velocidad lineal por ciclo
+	const float dw = 0.005f;  // cuánto disminuye la velocidad angular por ciclo
+
+	// actualizar velocidades
+	v += dv;
+	w -= dw;
+
+	// evitar que w se vuelva negativa o cero
+	if (w < 0.25f) w = 1.0f;
+
+	if (front_min->r<min_threshold) {
+		return{State::TURN, 0.0, 1.5};
+	}else {
+		return{State::SPIRAL, v,w};
+	}
+
+
+
+
+
 	/*
 			qDebug()<<"Estoy en espiral";
 			if (front_min->r<min_threshold) {
