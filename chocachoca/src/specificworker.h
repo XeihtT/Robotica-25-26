@@ -36,9 +36,14 @@
 #include <ranges>
 #include <webots/Robot.hpp>
 
+#include "rapplication/rapplication.h"
+
 /**
  * \brief Class SpecificWorker implements the core functionality of the component.
  */
+
+enum class State { FORWARD, TURN, SPIRAL, FOLLOW_WALL };
+
 class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
@@ -99,6 +104,7 @@ private:
      * \brief Flag indicating whether startup checks are enabled.
      */
 	bool startup_check_flag;
+	State state = State::FORWARD;
 	// graphics
 
 	//Chocachoca todo lo de abajo:
@@ -112,7 +118,14 @@ private:
 	std::optional<RoboCompLidar3D::TPoints> filter_min_distance_cppitertools(const RoboCompLidar3D::TPoints& points);
 	void update_robot_position();
 
-	void update_robot_state(const RoboCompLidar3D::TPoints& points);
+	std::tuple<float, float> update_robot_state(const RoboCompLidar3D::TPoints& points);
+
+	std::tuple<State, float, float> forward_method(const RoboCompLidar3D::TPoints& points);
+	std::tuple<State, float, float> turn_method(const RoboCompLidar3D::TPoints& points);
+	std::tuple<State, float, float> follow_wall_method(const RoboCompLidar3D::TPoints& points);
+	std::tuple<State, float, float> spiral_method(const RoboCompLidar3D::TPoints& points);
+
+	RoboCompLidar3D::TPoints filtro_datos();
 
 
 signals:

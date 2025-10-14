@@ -91,24 +91,33 @@ void SpecificWorker::initialize()
 
 void SpecificWorker::compute()
 {
+
+	RoboCompLidar3D::TPoints filtrados = filtro_datos();
+	std::tuple<float, float> velocidades = update_robot_state(filtrados);
+	try {
+		omnirobot_proxy->setSpeedBase(0.0, std::get<0>(velocidades), std::get<1>(velocidades)); //le hago el setSpeedBase
+	}catch (const Ice::Exception &e){std::cout<<e.what()<<std::endl; return;}
+
+}
+
+RoboCompLidar3D::TPoints SpecificWorker::filtro_datos() {
+
 	std::optional<RoboCompLidar3D::TPoints> filter_data;
 	try {
 		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		//qInfo() << "Size: "<<data.points.size();
-		if (data.points.empty()){qWarning()<<"No points"; return;}
+		if (data.points.empty()){qWarning()<<"No points"; return filter_data.value();}
 		filter_data=filter_min_distance_cppitertools(data.points);
 		auto data2=filter_data.value();
 		if (filter_data.has_value())
 			draw_lidar(filter_data.value(), &viewer->scene);
 		else
-			return; //nos aseguramos de que vamos a llamar a update_robot_state() con valores validos
+			return filter_data.value(); //nos aseguramos de que vamos a llamar a update_robot_state() con valores validos
 
-	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return;}
+	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return filter_data.value();}
 
-	update_robot_state(filter_data.value());
+	return filter_data.value();
 }
-
-
 
 void SpecificWorker::emergency()
 {
@@ -189,41 +198,90 @@ void SpecificWorker::update_robot_position() {
 
 	}
 	catch (const Ice::Exception& e){std::cout<<e.what();}
-
 }
 
-void SpecificWorker::update_robot_state(const RoboCompLidar3D::TPoints& filter_data) {
-	static enum class State { FORWARD, WALL, SPIRAL } state = State::FORWARD;
 
+std::tuple<float, float> SpecificWorker::update_robot_state(const RoboCompLidar3D::TPoints& points) {
+	std::tuple<State, float, float> result;
+	switch (this->state) {
+		default:
+			break;
+		case State::FORWARD:
+			result=forward_method(points);
+			break;
+		case State::TURN:
+			result=turn_method(points);
+			break;
+		case State::SPIRAL:
+			result=spiral_method(points);
+			break;
+		case State::FOLLOW_WALL:
+			result=follow_wall_method(points);
+			break;
+	}
+	this->state=std::get<State>(result);
+	return {std::get<1> (result), std::get<2>(result)};
+}
+
+
+std::tuple<State, float, float> SpecificWorker::forward_method(const RoboCompLidar3D::TPoints& filter_data) {
 	std::size_t start= filter_data.size()/2 - 20;
 	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
 
-	float min_threshold=980; //creo que asi esta bien, aun asi se puede testear
-	auto view = std::ranges::subrange(filter_data.begin() + start, filter_data.begin() + end);
-	auto front_min=std::min_element(view.begin(), view.end(), [](const auto& a, const auto& b){return a.r<b.r;});
-	try {
-		switch (state) {
-			case State::FORWARD:
-				if (front_min->r<min_threshold) {
-					qDebug()<<"Cambio a giro";
-					omnirobot_proxy->setSpeedBase(0.0, 0.0, 1.5);
-					state = State::WALL;
-				}
-				break;
-			case State::WALL:
-				if (front_min->r > 80+min_threshold) { //tengo margen para avanzar -> tengo que hacerlo para que quede paralelo
-					qDebug()<<"Cambio a avance";
-					omnirobot_proxy->setSpeedBase(0.0, 10000.0, 0.0);
-					state=State::FORWARD;
-				}
-				break;
+	float min_threshold=980;
+	auto front_min=std::min_element(filter_data.begin()+start, filter_data.begin()+end, [](const auto& a, const auto& b){return a.r<b.r;});
+	if (front_min->r<min_threshold) {
+		return{State::TURN, 0.0, 1.5};
+	}
+	else{
+		return {State::FORWARD, 10000.0, 0}; //por defecto sigo haciendo lo mismo
+	}
 
-			default:
-				break;
-		}
-	}catch (const Ice::Exception& e){std::cout<<e.what();} //necesario puesto que estamos llamando a metodos de setSpeedBase
 }
 
+std::tuple<State, float, float> SpecificWorker::turn_method(const RoboCompLidar3D::TPoints& filter_data) {
+	std::size_t start= filter_data.size()/2 - 20;
+	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
+
+
+	float min_threshold=980;
+	auto front_min=std::min_element(filter_data.begin()+start, filter_data.begin()+end, [](const auto& a, const auto& b){return a.r<b.r;});
+	if (front_min->r > 80+min_threshold) { //tengo margen para avanzar -> tengo que hacerlo para que quede paralelo
+		return {State::FORWARD, 10000.0, 0.0};
+	}
+	else {
+		return{State::TURN, 0.0, 1.5}; //por defecto sigo haciendo lo mismo
+	}
+}
+
+std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& points) {
+	//TODO
+	/*
+			if (std::fabs(total) < tolerance) {
+				qDebug()<<"Cambio a avance";
+				omnirobot_proxy->setSpeedBase(0.0, 10000.0, 0.0);
+				state=State::FORWARD;
+				break;
+			}
+			*/
+
+}
+
+std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLidar3D::TPoints& points) {
+	//TODO
+	/*
+			qDebug()<<"Estoy en espiral";
+			if (front_min->r<min_threshold) {
+				qDebug()<<"Cambio a giro";
+				omnirobot_proxy->setSpeedBase(0.0, 0.0, 1.5);
+				state = State::TURN;
+			}
+			else {
+				inc_velZ++; dec_velRot-=0.1;
+				omnirobot_proxy->setSpeedBase(0.0, inc_velZ, dec_velRot);
+			}
+			*/
+}
 /**************************************/
 // From the RoboCompLidar3D you can call this methods:
 // RoboCompLidar3D::TData this->lidar3d_proxy->getLidarData(string name, float start, float len, int decimationDegreeFactor)

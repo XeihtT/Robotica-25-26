@@ -4,60 +4,103 @@
   /home/xeihtt/robocomp/core/classes/ConfigLoader/ConfigLoader.tpp \
   /home/xeihtt/robocomp/core/classes/abstract_graphic_viewer/abstract_graphic_viewer.h \
   /home/xeihtt/robocomp/core/classes/grafcetStep/GRAFCETStep.h \
+  /home/xeihtt/robocomp/core/classes/rapplication/rapplication.h \
   /home/xeihtt/robotica/chocachoca/generated/GenericBase.h \
   /home/xeihtt/robotica/chocachoca/generated/Lidar3D.h \
   /home/xeihtt/robotica/chocachoca/generated/OmniRobot.h \
   /home/xeihtt/robotica/chocachoca/generated/genericworker.h \
   /usr/include/GL/gl.h \
+  /usr/include/Ice/Application.h \
   /usr/include/Ice/AsyncResult.h \
+  /usr/include/Ice/BatchRequestInterceptor.h \
   /usr/include/Ice/BatchRequestQueueF.h \
   /usr/include/Ice/Buffer.h \
   /usr/include/Ice/BuiltinSequences.h \
+  /usr/include/Ice/Communicator.h \
+  /usr/include/Ice/CommunicatorAsync.h \
   /usr/include/Ice/CommunicatorF.h \
   /usr/include/Ice/Comparable.h \
   /usr/include/Ice/Config.h \
+  /usr/include/Ice/Connection.h \
+  /usr/include/Ice/ConnectionAsync.h \
   /usr/include/Ice/ConnectionF.h \
   /usr/include/Ice/ConnectionIF.h \
   /usr/include/Ice/Current.h \
   /usr/include/Ice/DefaultValueFactory.h \
+  /usr/include/Ice/DispatchInterceptor.h \
+  /usr/include/Ice/Dispatcher.h \
+  /usr/include/Ice/Endpoint.h \
   /usr/include/Ice/EndpointF.h \
   /usr/include/Ice/EndpointTypes.h \
   /usr/include/Ice/Exception.h \
   /usr/include/Ice/ExceptionHelpers.h \
+  /usr/include/Ice/FacetMap.h \
   /usr/include/Ice/FactoryTable.h \
   /usr/include/Ice/FactoryTableInit.h \
   /usr/include/Ice/Format.h \
+  /usr/include/Ice/Functional.h \
   /usr/include/Ice/GCObject.h \
   /usr/include/Ice/Handle.h \
+  /usr/include/Ice/Ice.h \
+  /usr/include/Ice/IconvStringConverter.h \
   /usr/include/Ice/Identity.h \
+  /usr/include/Ice/ImplicitContext.h \
+  /usr/include/Ice/ImplicitContextF.h \
   /usr/include/Ice/Incoming.h \
+  /usr/include/Ice/IncomingAsync.h \
   /usr/include/Ice/IncomingAsyncF.h \
+  /usr/include/Ice/Initialize.h \
   /usr/include/Ice/InputStream.h \
   /usr/include/Ice/InstanceF.h \
   /usr/include/Ice/Instrumentation.h \
+  /usr/include/Ice/InstrumentationF.h \
+  /usr/include/Ice/InterfaceByValue.h \
   /usr/include/Ice/LocalException.h \
   /usr/include/Ice/LocalObject.h \
+  /usr/include/Ice/Locator.h \
+  /usr/include/Ice/Logger.h \
   /usr/include/Ice/LoggerF.h \
+  /usr/include/Ice/LoggerUtil.h \
+  /usr/include/Ice/Metrics.h \
+  /usr/include/Ice/NativePropertiesAdmin.h \
   /usr/include/Ice/Object.h \
+  /usr/include/Ice/ObjectAdapter.h \
   /usr/include/Ice/ObjectAdapterF.h \
   /usr/include/Ice/ObjectF.h \
+  /usr/include/Ice/ObjectFactory.h \
   /usr/include/Ice/ObserverHelper.h \
   /usr/include/Ice/Optional.h \
   /usr/include/Ice/OutgoingAsync.h \
   /usr/include/Ice/OutgoingAsyncF.h \
   /usr/include/Ice/OutputStream.h \
+  /usr/include/Ice/Plugin.h \
+  /usr/include/Ice/PluginF.h \
+  /usr/include/Ice/Process.h \
+  /usr/include/Ice/Properties.h \
+  /usr/include/Ice/PropertiesAdmin.h \
+  /usr/include/Ice/PropertiesF.h \
   /usr/include/Ice/Protocol.h \
   /usr/include/Ice/Proxy.h \
   /usr/include/Ice/ProxyF.h \
   /usr/include/Ice/ProxyFactoryF.h \
   /usr/include/Ice/ProxyHandle.h \
   /usr/include/Ice/ReferenceF.h \
+  /usr/include/Ice/RegisterPlugins.h \
+  /usr/include/Ice/RemoteLogger.h \
   /usr/include/Ice/RequestHandlerF.h \
   /usr/include/Ice/ResponseHandlerF.h \
+  /usr/include/Ice/Router.h \
+  /usr/include/Ice/ServantLocator.h \
   /usr/include/Ice/ServantLocatorF.h \
   /usr/include/Ice/ServantManagerF.h \
+  /usr/include/Ice/Service.h \
+  /usr/include/Ice/SliceChecksumDict.h \
+  /usr/include/Ice/SliceChecksums.h \
+  /usr/include/Ice/SlicedData.h \
   /usr/include/Ice/SlicedDataF.h \
   /usr/include/Ice/StreamHelpers.h \
+  /usr/include/Ice/StringConverter.h \
+  /usr/include/Ice/UUID.h \
   /usr/include/Ice/UniquePtr.h \
   /usr/include/Ice/UserExceptionFactory.h \
   /usr/include/Ice/Value.h \
@@ -67,20 +110,29 @@
   /usr/include/IceUtil/Atomic.h \
   /usr/include/IceUtil/Cond.h \
   /usr/include/IceUtil/Config.h \
+  /usr/include/IceUtil/ConsoleUtil.h \
+  /usr/include/IceUtil/CtrlCHandler.h \
   /usr/include/IceUtil/Exception.h \
+  /usr/include/IceUtil/Functional.h \
   /usr/include/IceUtil/Handle.h \
+  /usr/include/IceUtil/IceUtil.h \
   /usr/include/IceUtil/Lock.h \
   /usr/include/IceUtil/Monitor.h \
   /usr/include/IceUtil/Mutex.h \
   /usr/include/IceUtil/MutexProtocol.h \
+  /usr/include/IceUtil/MutexPtrLock.h \
   /usr/include/IceUtil/PopDisableWarnings.h \
   /usr/include/IceUtil/PushDisableWarnings.h \
+  /usr/include/IceUtil/RecMutex.h \
   /usr/include/IceUtil/ScopedArray.h \
   /usr/include/IceUtil/Shared.h \
+  /usr/include/IceUtil/StringConverter.h \
+  /usr/include/IceUtil/StringUtil.h \
   /usr/include/IceUtil/Thread.h \
   /usr/include/IceUtil/ThreadException.h \
   /usr/include/IceUtil/Time.h \
   /usr/include/IceUtil/Timer.h \
+  /usr/include/IceUtil/UUID.h \
   /usr/include/IceUtil/UndefSysMacros.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
@@ -298,12 +350,15 @@
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/iconv.h \
   /usr/include/inttypes.h \
+  /usr/include/langinfo.h \
   /usr/include/libintl.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/locale.h \
+  /usr/include/nl_types.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
   /usr/include/stdc-predef.h \

@@ -1283,4 +1283,7 @@ generated/CMakeFiles/chocachoca.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QVBoxLayout \
  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QGraphicsPolygonItem \
  /usr/include/c++/13/ranges /usr/include/webots/Robot.hpp \
- /usr/include/webots/../../c/webots/types.h
+ /usr/include/webots/../../c/webots/types.h \
+ /home/robocomp/robocomp/classes/rapplication/rapplication.h \
+ /usr/include/IceUtil/IceUtil.h /usr/include/IceUtil/Functional.h \
+ /usr/include/IceUtil/MutexPtrLock.h /usr/include/IceUtil/RecMutex.h
