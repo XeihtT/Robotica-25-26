@@ -17,11 +17,13 @@
  *    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "specificworker.h"
-#include "cppitertools/itertools.hpp"
-
-SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx)
+//Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
+SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx), gen(rd()), rand(0,1)
 {
 	this->startup_check_flag = startup_check;
+	//inicializamos los atributos de generacion de numeros aleatorios
+
+
 	if(this->startup_check_flag)
 	{
 		this->startup_check();
@@ -93,6 +95,12 @@ void SpecificWorker::compute()
 {
 
 	RoboCompLidar3D::TPoints filtrados = filtro_datos();
+	/*
+	auto view = filtrados | std::ranges::view(filtrados.size()/2-20, filtrados.size()/2+20);
+	for (const auto& p: filtrados) {
+		qDebug()<<p.r;
+	}
+	*/
 	std::tuple<float, float> velocidades = update_robot_state(filtrados);
 	try {
 		omnirobot_proxy->setSpeedBase(0.0, std::get<0>(velocidades), std::get<1>(velocidades)); //le hago el setSpeedBase
@@ -231,7 +239,8 @@ std::tuple<State, float, float> SpecificWorker::forward_method(const RoboCompLid
 	float min_threshold=980;
 	auto front_min=std::min_element(filter_data.begin()+start, filter_data.begin()+end, [](const auto& a, const auto& b){return a.r<b.r;});
 	if (front_min->r<min_threshold) {
-		return{State::TURN, 0.0, 1.5};
+		//qDebug()<<"Cambio a giro";
+		return{State::TURN, 0.0, 2};
 	}
 	else{
 		return {State::FORWARD, 10000.0, 0}; //por defecto sigo haciendo lo mismo
@@ -242,28 +251,84 @@ std::tuple<State, float, float> SpecificWorker::forward_method(const RoboCompLid
 std::tuple<State, float, float> SpecificWorker::turn_method(const RoboCompLidar3D::TPoints& filter_data) {
 	std::size_t start= filter_data.size()/2 - 20;
 	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
-
-
-	float min_threshold=980;
+	static auto start_time = std::chrono::steady_clock::now();
+	State possible_states[2] = {State::FORWARD, State::FOLLOW_WALL};
+	int aux;
+	float min_threshold=950;
 	auto front_min=std::min_element(filter_data.begin()+start, filter_data.begin()+end, [](const auto& a, const auto& b){return a.r<b.r;});
+
+	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+					   std::chrono::steady_clock::now() - start_time)
+					   .count();
+
 	if (front_min->r > 80+min_threshold) { //tengo margen para avanzar -> tengo que hacerlo para que quede paralelo
-		return {State::FORWARD, 10000.0, 0.0};
+		//qDebug()<<"Cambio a avance";
+		aux = rand(gen);
+		//qDebug()<<aux;
+		//return {possible_states[rand(gen)], 10000.0, 0.0};
+
+		if (elapsed <= 90 ) { //por probar, con 90 me sale un 7,45
+			//qDebug()<<"Como ha pasado menos de 1 min y medio, sigo a la pared";
+			return {State::FOLLOW_WALL, 10000.0, 0.0};
+		}
+		else {
+			//qDebug()<<"Como ha pasado más de un min y medio, voy hacia delante";
+			return {State::FORWARD, 10000.0, 0};
+		}
 	}
 	else {
-		return{State::TURN, 0.0, 1.5}; //por defecto sigo haciendo lo mismo
+		return{State::TURN, 300.0, 2.0}; //por defecto sigo haciendo lo mismo
 	}
 }
 
-std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& points) {
-	//TODO
+std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& filter_data) {
+	static auto start_time = std::chrono::steady_clock::now();
+
+	std::size_t left_start= filter_data.size()/4-15; //test para ver si asi se choca (no deberia)
+	std::size_t left_end   = filter_data.size()/4 + 15;
+	auto left_view=std::ranges::subrange(filter_data.begin()+ left_start, filter_data.begin()+left_end); //si son los de la izquierda
+	auto left_min=std::min_element(filter_data.begin()+left_start, filter_data.begin()+left_end, [](const auto& a, const auto& b){return a.r<b.r;});
+
+	const float min_dist = 890.0f;     // umbral de seguridad frontal (va aumentando para recorrer más)
+	static float max_extra_dist= 240.0f; //maximo que puede aumentar la distancia a pared //nose si era 240 o 340 el 7
+	const float Kp_rot = 0.003f;             // ganancia proporcional de giro
+	const float velZ = 4000.0f;              // avance constante
+	const float rot_max=2.0f;
+
+
+	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+					   std::chrono::steady_clock::now() - start_time)
+					   .count();
+	float period = 15.0f; //cada cuantos s hace un ciclo completo
+
+	float desired_dist = min_dist + (max_extra_dist * std::sin(M_PI*2*elapsed / period));
+	float rot = -Kp_rot * std::abs((min_dist - left_min->r));
+
+	//qDebug()<<rot;
+	if (left_min->r > desired_dist) { //perdio la pared
+		return {State::TURN, 300.0, rot};
+	}
+	if (left_min->r < desired_dist)             // se está chocando
+		return {State::TURN, 300.0f, 2.0f};
+
+	// --- Comportamiento normal: seguir pared con zig-zag ---
+	return {State::FOLLOW_WALL, velZ, rot};
+
+
+
 	/*
-			if (std::fabs(total) < tolerance) {
-				qDebug()<<"Cambio a avance";
-				omnirobot_proxy->setSpeedBase(0.0, 10000.0, 0.0);
-				state=State::FORWARD;
-				break;
-			}
-			*/
+	if (left_min->r<desired_dist) { //min_dist
+		return{State::TURN, 300.0, 0.75}; //me alejo de la pared girando
+	}
+	if (left_min->r > desired_dist) { //min_dist + 80
+		rot = -Kp_rot * std::abs((min_dist - left_min->r)); //en vez de min_front_dist, ponia desired dist
+		return{State::TURN, 300.0, rot}; //me acerco a la pared
+	}
+	//TODO ACABAR
+
+	// Devuelve estado por defecto
+	return {State::FOLLOW_WALL, velZ, rot};
+	*/
 
 }
 
@@ -273,7 +338,7 @@ std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLida
 	std::size_t end   = filter_data.size()/2 + 20; //necesario porque en trayectorias casi paralelas a la pared va rozando
 
 
-	float min_threshold=980;
+	float min_threshold=580;
 	auto front_min=std::min_element(filter_data.begin()+start, filter_data.begin()+end, [](const auto& a, const auto& b){return a.r<b.r;});
 	// variables estáticas o de clase para mantener el estado entre llamadas
 	static float v = 200.0f;   // velocidad lineal inicial

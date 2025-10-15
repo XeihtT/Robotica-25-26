@@ -35,8 +35,11 @@
 #include <abstract_graphic_viewer/abstract_graphic_viewer.h>
 #include <ranges>
 #include <webots/Robot.hpp>
+#include "cppitertools/itertools.hpp"
+#include <random>
 
 #include "rapplication/rapplication.h"
+
 
 /**
  * \brief Class SpecificWorker implements the core functionality of the component.
@@ -105,6 +108,12 @@ private:
      */
 	bool startup_check_flag;
 	State state = State::SPIRAL;
+
+	//Random nums:
+	std::random_device rd;
+	std::mt19937 gen;
+	std::uniform_int_distribution<int> rand;
+
 	// graphics
 
 	//Chocachoca todo lo de abajo:
