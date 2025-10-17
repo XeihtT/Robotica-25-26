@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
+  "/home/robocomp/robotica/chocachoca/generated/GenericBase.ice"
   "CMakeFiles/ICE_GenericBase_target"
-  "GenericBase.ice"
 )
 
 # Per-language clean rules from dependency scanning.

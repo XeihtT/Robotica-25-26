@@ -31,12 +31,20 @@
 // If you want to reduce the period automatically due to lack of use, you must uncomment the following line
 //#define HIBERNATION_ENABLED
 
+#ifdef emit
+#  undef emit
+#endif
+#include <execution>
+#include <expected>
+
 #include <genericworker.h>
 #include <abstract_graphic_viewer/abstract_graphic_viewer.h>
 #include <ranges>
 #include <webots/Robot.hpp>
 #include "cppitertools/itertools.hpp"
 #include <random>
+#include <cmath>
+#include<cppitertools/enumerate.hpp>
 
 #include "rapplication/rapplication.h"
 
@@ -71,7 +79,7 @@ public slots:
 	void new_target_slot(QPointF);
 
 	//Chocachoca
-	void draw_lidar(const std::vector<RoboCompLidar3D::TPoint>& filter_data, QGraphicsScene* scene);
+	void draw_lidar(const RoboCompLidar3D::TPoints& filter_data, QGraphicsScene* scene);
 
 	/**
 	 * \brief Initializes the worker one time.
@@ -112,7 +120,7 @@ private:
 	//Random nums:
 	std::random_device rd;
 	std::mt19937 gen;
-	std::uniform_int_distribution<int> rand;
+	std::uniform_real_distribution<float> rand;
 
 	// graphics
 
@@ -123,8 +131,8 @@ private:
 	const int ROBOT_LENGTH = 400;
 	QGraphicsPolygonItem *robot_polygon;
 
-
 	std::optional<RoboCompLidar3D::TPoints> filter_min_distance_cppitertools(const RoboCompLidar3D::TPoints& points);
+	RoboCompLidar3D::TPoints filter_isolated_points(const RoboCompLidar3D::TPoints &points, float d);
 	void update_robot_position();
 
 	std::tuple<float, float> update_robot_state(const RoboCompLidar3D::TPoints& points);
@@ -135,6 +143,9 @@ private:
 	std::tuple<State, float, float> spiral_method(const RoboCompLidar3D::TPoints& points);
 
 	RoboCompLidar3D::TPoints filtro_datos();
+
+	std::expected<int, std::string> closest_lidar_index_to_given_angle(const auto &points, float angle);
+
 
 
 signals:

@@ -1,5 +1,5 @@
-/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/EEBIQBSTGR/moc_abstract_graphic_viewer.cpp: /home/xeihtt/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.h \
-  /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
+/home/robocomp/robotica/chocachoca/generated/chocachoca_autogen/C5I4E6MOFA/moc_abstract_graphic_viewer.cpp: /home/robocomp/robocomp/classes/abstract_graphic_viewer/abstract_graphic_viewer.h \
+  /home/robocomp/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \

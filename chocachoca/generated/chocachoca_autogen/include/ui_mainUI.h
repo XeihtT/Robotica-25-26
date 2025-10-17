@@ -22,6 +22,8 @@ class Ui_guiDlg
 public:
     QVBoxLayout *verticalLayout;
     QFrame *frame;
+    QWidget *verticalLayoutWidget;
+    QVBoxLayout *verticalLayout_2;
 
     void setupUi(QWidget *guiDlg)
     {
@@ -34,6 +36,12 @@ public:
         frame->setObjectName("frame");
         frame->setFrameShape(QFrame::StyledPanel);
         frame->setFrameShadow(QFrame::Raised);
+        verticalLayoutWidget = new QWidget(frame);
+        verticalLayoutWidget->setObjectName("verticalLayoutWidget");
+        verticalLayoutWidget->setGeometry(QRect(0, 0, 821, 631));
+        verticalLayout_2 = new QVBoxLayout(verticalLayoutWidget);
+        verticalLayout_2->setObjectName("verticalLayout_2");
+        verticalLayout_2->setContentsMargins(0, 0, 0, 0);
 
         verticalLayout->addWidget(frame);
 

@@ -1,4 +1,4 @@
-/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/VNU7RW3YIC/moc_specificworker.cpp: /home/xeihtt/robotica/chocachoca/src/specificworker.h \
+/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/VNU7RW3YIC/moc_specificworker.cpp: /home/robocomp/robotica/chocachoca/src/specificworker.h \
   /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
   /home/xeihtt/robocomp/core/classes/ConfigLoader/ConfigLoader.h \
   /home/xeihtt/robocomp/core/classes/ConfigLoader/ConfigLoader.tpp \
@@ -9,6 +9,40 @@
   /home/xeihtt/robotica/chocachoca/generated/Lidar3D.h \
   /home/xeihtt/robotica/chocachoca/generated/OmniRobot.h \
   /home/xeihtt/robotica/chocachoca/generated/genericworker.h \
+  /home/xeihtt/software/cppitertools/cppitertools/accumulate.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/batched.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/chain.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/chunked.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/combinations.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/combinations_with_replacement.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/compress.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/count.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/cycle.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/dropwhile.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/enumerate.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/filter.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/filterfalse.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/groupby.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/imap.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/internal/iter_tuples.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/internal/iterator_wrapper.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/internal/iteratoriterator.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/internal/iterbase.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/itertools.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/permutations.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/powerset.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/product.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/range.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/repeat.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/reversed.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/slice.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/sliding_window.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/sorted.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/starmap.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/takewhile.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/unique_everseen.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/unique_justseen.hpp \
+  /home/xeihtt/software/cppitertools/cppitertools/zip.hpp \
   /usr/include/GL/gl.h \
   /usr/include/Ice/Application.h \
   /usr/include/Ice/AsyncResult.h \
@@ -282,6 +316,8 @@
   /usr/include/c++/13/debug/debug.h \
   /usr/include/c++/13/deque \
   /usr/include/c++/13/exception \
+  /usr/include/c++/13/execution \
+  /usr/include/c++/13/expected \
   /usr/include/c++/13/ext/aligned_buffer.h \
   /usr/include/c++/13/ext/alloc_traits.h \
   /usr/include/c++/13/ext/atomicity.h \
@@ -311,10 +347,25 @@
   /usr/include/c++/13/numeric \
   /usr/include/c++/13/optional \
   /usr/include/c++/13/ostream \
+  /usr/include/c++/13/pstl/algorithm_fwd.h \
+  /usr/include/c++/13/pstl/algorithm_impl.h \
   /usr/include/c++/13/pstl/execution_defs.h \
+  /usr/include/c++/13/pstl/execution_impl.h \
   /usr/include/c++/13/pstl/glue_algorithm_defs.h \
-  /usr/include/c++/13/pstl/glue_memory_defs.h \
+  /usr/include/c++/13/pstl/glue_algorithm_impl.h \
+  /usr/include/c++/13/pstl/glue_execution_defs.h \
+  /usr/include/c++/13/pstl/glue_memory_impl.h \
   /usr/include/c++/13/pstl/glue_numeric_defs.h \
+  /usr/include/c++/13/pstl/glue_numeric_impl.h \
+  /usr/include/c++/13/pstl/memory_impl.h \
+  /usr/include/c++/13/pstl/numeric_fwd.h \
+  /usr/include/c++/13/pstl/numeric_impl.h \
+  /usr/include/c++/13/pstl/parallel_backend.h \
+  /usr/include/c++/13/pstl/parallel_backend_utils.h \
+  /usr/include/c++/13/pstl/parallel_impl.h \
+  /usr/include/c++/13/pstl/pstl_config.h \
+  /usr/include/c++/13/pstl/unseq_backend_simd.h \
+  /usr/include/c++/13/pstl/utils.h \
   /usr/include/c++/13/random \
   /usr/include/c++/13/ranges \
   /usr/include/c++/13/ratio \
@@ -342,6 +393,7 @@
   /usr/include/c++/13/type_traits \
   /usr/include/c++/13/typeinfo \
   /usr/include/c++/13/unordered_map \
+  /usr/include/c++/13/unordered_set \
   /usr/include/c++/13/utility \
   /usr/include/c++/13/variant \
   /usr/include/c++/13/vector \

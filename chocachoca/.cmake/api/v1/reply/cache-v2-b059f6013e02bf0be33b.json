@@ -67,7 +67,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "3"
+			"value" : "4"
 		},
 		{
 			"name" : "CMAKE_CACHE_MINOR_VERSION",
@@ -79,7 +79,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "28"
+			"value" : "1"
 		},
 		{
 			"name" : "CMAKE_CACHE_PATCH_VERSION",
@@ -91,7 +91,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "3"
+			"value" : "2"
 		},
 		{
 			"name" : "CMAKE_COLOR_DIAGNOSTICS",
@@ -131,7 +131,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/usr/bin/cmake"
+			"value" : "/snap/cmake/1487/bin/cmake"
 		},
 		{
 			"name" : "CMAKE_CPACK_COMMAND",
@@ -143,7 +143,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/usr/bin/cpack"
+			"value" : "/snap/cmake/1487/bin/cpack"
 		},
 		{
 			"name" : "CMAKE_CTEST_COMMAND",
@@ -155,7 +155,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/usr/bin/ctest"
+			"value" : "/snap/cmake/1487/bin/ctest"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER",
@@ -430,6 +430,18 @@
 			"value" : "CMAKE_DLLTOOL-NOTFOUND"
 		},
 		{
+			"name" : "CMAKE_EDIT_COMMAND",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to cache edit program executable."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/snap/cmake/1487/bin/ccmake"
+		},
+		{
 			"name" : "CMAKE_EXECUTABLE_FORMAT",
 			"properties" : 
 			[
@@ -631,7 +643,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/xeihtt/robotica/chocachoca"
+			"value" : "/home/robocomp/robotica/chocachoca"
 		},
 		{
 			"name" : "CMAKE_INSTALL_BINDIR",
@@ -930,6 +942,18 @@
 			"value" : "/usr/bin/ld"
 		},
 		{
+			"name" : "CMAKE_LIST_FILE_NAME",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Name of CMakeLists files to read"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "CMakeLists.txt"
+		},
+		{
 			"name" : "CMAKE_MAKE_PROGRAM",
 			"properties" : 
 			[
@@ -1094,6 +1118,18 @@
 			"value" : "1"
 		},
 		{
+			"name" : "CMAKE_PROJECT_COMPAT_VERSION",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : ""
+		},
+		{
 			"name" : "CMAKE_PROJECT_DESCRIPTION",
 			"properties" : 
 			[
@@ -1171,7 +1207,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/usr/share/cmake-3.28"
+			"value" : "/snap/cmake/1487/share/cmake-4.1"
 		},
 		{
 			"name" : "CMAKE_SHARED_LINKER_FLAGS",
@@ -1447,7 +1483,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "[/usr/lib/x86_64-linux-gnu/libOpenGL.so][/usr/lib/x86_64-linux-gnu/libGLX.so][/usr/include][c ][v()]"
+			"value" : "[/usr/lib/x86_64-linux-gnu/libOpenGL.so][/usr/lib/x86_64-linux-gnu/libGLX.so][/usr/include][ ][v()]"
 		},
 		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Threads",
@@ -2335,7 +2371,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/xeihtt/software/pip_venv/bin/slice2py"
+			"value" : "/usr/bin/slice2py"
 		},
 		{
 			"name" : "Ice_SLICE2RB_EXECUTABLE",
@@ -2407,6 +2443,22 @@
 		},
 		{
 			"name" : "OPENGL_GLES3_INCLUDE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/include"
+		},
+		{
+			"name" : "OPENGL_GLU_INCLUDE_DIR",
 			"properties" : 
 			[
 				{
@@ -7491,7 +7543,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "/home/xeihtt/robotica/chocachoca"
+			"value" : "/home/robocomp/robotica/chocachoca"
 		},
 		{
 			"name" : "RC_COMPONENT_INSTALL_PATH",
@@ -7515,7 +7567,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "/home/xeihtt/robotica/chocachoca"
+			"value" : "/home/robocomp/robotica/chocachoca"
 		},
 		{
 			"name" : "RoboComp_VERSION",
@@ -7528,6 +7580,18 @@
 			],
 			"type" : "STRING",
 			"value" : "2021.2.1"
+		},
+		{
+			"name" : "TBB_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for TBB."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/lib/x86_64-linux-gnu/cmake/TBB"
 		},
 		{
 			"name" : "USE_QT4",
@@ -7751,7 +7815,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/xeihtt/robotica/chocachoca"
+			"value" : "/home/robocomp/robotica/chocachoca"
 		},
 		{
 			"name" : "pkgcfg_lib_PKG_XKB_xkbcommon",

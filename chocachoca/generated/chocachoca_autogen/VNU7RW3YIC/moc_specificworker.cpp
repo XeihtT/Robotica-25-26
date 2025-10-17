@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #include <memory>
-#include "../../../src/specificworker.h"
+#include "../../../../../../robocomp/robotica/chocachoca/src/specificworker.h"
 #include <QtGui/qtextcursor.h>
 #include <QScreen>
 #include <QtCore/qmetatype.h>
@@ -33,7 +33,7 @@ struct qt_meta_stringdata_SpecificWorker_t {
     char stringdata1[16];
     char stringdata2[1];
     char stringdata3[11];
-    char stringdata4[37];
+    char stringdata4[25];
     char stringdata5[12];
     char stringdata6[16];
     char stringdata7[6];
@@ -51,21 +51,21 @@ Q_CONSTINIT static const qt_meta_stringdata_SpecificWorker_t qt_meta_stringdata_
         QT_MOC_LITERAL(15, 15),  // "new_target_slot"
         QT_MOC_LITERAL(31, 0),  // ""
         QT_MOC_LITERAL(32, 10),  // "draw_lidar"
-        QT_MOC_LITERAL(43, 36),  // "std::vector<RoboCompLidar3D::..."
-        QT_MOC_LITERAL(80, 11),  // "filter_data"
-        QT_MOC_LITERAL(92, 15),  // "QGraphicsScene*"
-        QT_MOC_LITERAL(108, 5),  // "scene"
-        QT_MOC_LITERAL(114, 10),  // "initialize"
-        QT_MOC_LITERAL(125, 7),  // "compute"
-        QT_MOC_LITERAL(133, 9),  // "emergency"
-        QT_MOC_LITERAL(143, 7),  // "restore"
-        QT_MOC_LITERAL(151, 13)   // "startup_check"
+        QT_MOC_LITERAL(43, 24),  // "RoboCompLidar3D::TPoints"
+        QT_MOC_LITERAL(68, 11),  // "filter_data"
+        QT_MOC_LITERAL(80, 15),  // "QGraphicsScene*"
+        QT_MOC_LITERAL(96, 5),  // "scene"
+        QT_MOC_LITERAL(102, 10),  // "initialize"
+        QT_MOC_LITERAL(113, 7),  // "compute"
+        QT_MOC_LITERAL(121, 9),  // "emergency"
+        QT_MOC_LITERAL(131, 7),  // "restore"
+        QT_MOC_LITERAL(139, 13)   // "startup_check"
     },
     "SpecificWorker",
     "new_target_slot",
     "",
     "draw_lidar",
-    "std::vector<RoboCompLidar3D::TPoint>",
+    "RoboCompLidar3D::TPoints",
     "filter_data",
     "QGraphicsScene*",
     "scene",
@@ -126,7 +126,7 @@ Q_CONSTINIT const QMetaObject SpecificWorker::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<QPointF, std::false_type>,
         // method 'draw_lidar'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const std::vector<RoboCompLidar3D::TPoint> &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const RoboCompLidar3D::TPoints &, std::false_type>,
         QtPrivate::TypeAndForceComplete<QGraphicsScene *, std::false_type>,
         // method 'initialize'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
@@ -149,7 +149,7 @@ void SpecificWorker::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         (void)_t;
         switch (_id) {
         case 0: _t->new_target_slot((*reinterpret_cast< std::add_pointer_t<QPointF>>(_a[1]))); break;
-        case 1: _t->draw_lidar((*reinterpret_cast< std::add_pointer_t<std::vector<RoboCompLidar3D::TPoint>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QGraphicsScene*>>(_a[2]))); break;
+        case 1: _t->draw_lidar((*reinterpret_cast< std::add_pointer_t<RoboCompLidar3D::TPoints>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QGraphicsScene*>>(_a[2]))); break;
         case 2: _t->initialize(); break;
         case 3: _t->compute(); break;
         case 4: _t->emergency(); break;
