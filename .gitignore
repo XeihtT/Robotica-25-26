@@ -1,0 +1,13 @@
+build/
+CMakeFiles/
+CMakeCache.txt
+CMakeLists.txt
+Makefile
+.idea
+.qt
+cmake_install.cmake
+*.o
+*.so
+*.a
+robotica_startup.sh
+.cmake/*
