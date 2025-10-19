@@ -45,7 +45,7 @@
 #include <random>
 #include <cmath>
 #include<cppitertools/enumerate.hpp>
-
+#include <Eigen/Dense>
 #include "rapplication/rapplication.h"
 
 
@@ -53,7 +53,7 @@
  * \brief Class SpecificWorker implements the core functionality of the component.
  */
 
-enum class State { FORWARD, TURN, SPIRAL, FOLLOW_WALL };
+enum class State { FORWARD, TURN, SPIRAL, FOLLOW_WALL};
 
 class SpecificWorker : public GenericWorker
 {
@@ -115,7 +115,7 @@ private:
      * \brief Flag indicating whether startup checks are enabled.
      */
 	bool startup_check_flag;
-	State state = State::SPIRAL;
+	State state = State::FORWARD;
 
 	//Random nums:
 	std::random_device rd;
