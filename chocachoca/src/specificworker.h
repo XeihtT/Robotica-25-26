@@ -53,7 +53,7 @@
  * \brief Class SpecificWorker implements the core functionality of the component.
  */
 
-enum class State { FORWARD, TURN, SPIRAL, FOLLOW_WALL};
+enum class State { FORWARD, TURN_FORWARD, TURN_FOLLOW, SPIRAL, FOLLOW_WALL};
 
 class SpecificWorker : public GenericWorker
 {
@@ -115,7 +115,7 @@ private:
      * \brief Flag indicating whether startup checks are enabled.
      */
 	bool startup_check_flag;
-	State state = State::FORWARD;
+	State state = State::SPIRAL;
 
 	//Random nums:
 	std::random_device rd;
@@ -142,6 +142,8 @@ private:
 	std::tuple<State, float, float> follow_wall_method(const RoboCompLidar3D::TPoints& points);
 	std::tuple<State, float, float> spiral_method(const RoboCompLidar3D::TPoints& points);
 
+	std::tuple<State, float, float> turn_method1(const RoboCompLidar3D::TPoints& filter_data);
+	std::tuple<State, float, float> turn_method2(const RoboCompLidar3D::TPoints& points);
 	RoboCompLidar3D::TPoints filtro_datos();
 
 	std::expected<int, std::string> closest_lidar_index_to_given_angle(const auto &points, float angle);

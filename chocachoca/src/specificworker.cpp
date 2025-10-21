@@ -20,6 +20,8 @@
 
 const float MIN_TO_WALL = 720.0f; //Distancia minima que el robot tendra a una pared antes de que este empiece a girar
 State last_state = State::SPIRAL;
+float follow_wall_time = 50; //cuantos segundos está en follow wall antes de pasar a forward
+
 //Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
 SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx), gen(rd()), rand(600,2200)
 {
@@ -98,11 +100,17 @@ void SpecificWorker::compute()
 {
 
 	RoboCompLidar3D::TPoints filtrados = filtro_datos();
+
 	/*
 	auto left_begin = closest_lidar_index_to_given_angle(filter_data, -M_PI/2 -0.01); //params.LIDAR_FRONT_SECTION = -10
 	auto left_end = closest_lidar_index_to_given_angle(filter_data, -M_PI/2  + 0.01); //params.LIDAR_FRONT_SECTION = +10
 	auto left_min=std::min_element(filter_data.begin()+left_begin.value(), filter_data.begin()+left_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
 
+	//auto view = std::ranges::subrange(filter_data.begin()+left_begin.value(), filter_data.begin()+left_end.value());
+	qDebug()<<left_min->distance2d << "---" <<left_end.value() - left_begin.value();
+	omnirobot_proxy->setSpeedBase(0.0, 0.0, -1.0f); //le hago el setSpeedBase
+	*/
+	/*
 	auto front_begin = closest_lidar_index_to_given_angle(filter_data, -0.1);
 	auto front_end = closest_lidar_index_to_given_angle(filter_data, 0.1);
 	auto front_min = std::min_element(filter_data.begin()+front_begin.value(), filter_data.begin()+front_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
@@ -110,11 +118,12 @@ void SpecificWorker::compute()
 	qDebug()<<"Fron:"<<front_min->x<<"- "<<front_min->y<<" - "<<front_min->z<<" - "<<front_min->phi<<" - "<<front_min->theta; //parece que pertenecen a misma pared cuando theta parecida
 	*/
 
+
 	std::tuple<float, float> velocidades = update_robot_state(filtrados);
 	try {
 		omnirobot_proxy->setSpeedBase(0.0, std::get<0>(velocidades), std::get<1>(velocidades)); //le hago el setSpeedBase
 	}catch (const Ice::Exception &e){std::cout<<e.what()<<std::endl; return;}
-
+	
 	//cuando la diferencia de z es menos de 120
 }
 void SpecificWorker::emergency()
@@ -351,8 +360,11 @@ std::tuple<float, float> SpecificWorker::update_robot_state(const RoboCompLidar3
 		case State::FORWARD:
 			result=forward_method(points);
 			break;
-		case State::TURN:
-			result=turn_method(points);
+		case State::TURN_FOLLOW:
+			result=turn_method2(points);
+			break;
+		case State::TURN_FORWARD:
+			result=turn_method1(points);
 			break;
 		case State::SPIRAL:
 			result=spiral_method(points);
@@ -369,20 +381,22 @@ std::tuple<float, float> SpecificWorker::update_robot_state(const RoboCompLidar3
 std::tuple<State, float, float> SpecificWorker::forward_method(const RoboCompLidar3D::TPoints& filter_data) {
 	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.1); //params.LIDAR_FRONT_SECTION = -10
 	auto frente_end = closest_lidar_index_to_given_angle(filter_data, 0.1); //params.LIDAR_FRONT_SECTION = +10
-
+	last_state = State::FORWARD;
 	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(), [](const auto& a, const auto& b){return a.r<b.r;});
 	if (front_min->distance2d<MIN_TO_WALL) {
 		//qDebug()<<"Cambio a giro";
-		return{State::TURN, 0.0, 3.0f};
+
+		return{State::TURN_FORWARD, 0.0, 3.0f};
 	}
-	else{
-		return {State::FORWARD, 10000.0, 0}; //por defecto sigo haciendo lo mismo
-	}
+
+	return {State::FORWARD, 10000.0, 0}; //por defecto sigo haciendo lo mismo
+
 
 }
 
 std::tuple<State, float, float> SpecificWorker::turn_method(const RoboCompLidar3D::TPoints& filter_data) {
-	//TODO: if last state = FOLLOW WALL, hacer que gire teniendo en cuenta left '
+	/*
+	//TODO: if last state = FOLLOW WALL, hacer que gire teniendo en cuenta left
 	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.1); //params.LIDAR_FRONT_SECTION = -10
 	auto frente_end = closest_lidar_index_to_given_angle(filter_data, 0.1); //params.LIDAR_FRONT_SECTION = +10
 	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(),
@@ -400,41 +414,89 @@ std::tuple<State, float, float> SpecificWorker::turn_method(const RoboCompLidar3
 	static float last_turn_sign = 1;
 	static bool turning = false;
 	static int count = 0;
-	float dist_threshold = elapsed <= 40 ? MIN_TO_WALL*2 : rand(gen); //TODO: Cambiarlo para que sea más extremo
+	float dist_threshold = elapsed <= 50 ? MIN_TO_WALL*2 : rand(gen); //TODO: Cambiarlo para que sea más extremo
 	//qDebug()<<"La distancia de margen es: "<<dist_threshold;
 	if (front_min->distance2d > dist_threshold) { //tengo margen para avanzar -> tengo que hacerlo para que quede paralelo
-		//return {State::FORWARD, 10000.0, 0};
-		if (elapsed <= 40 ) { //por probar, con 90 me sale un 7,45 aqui
+		last_state=State::TURN;
+		if (elapsed <= 50 ) { //por probar, con 90 me sale un 7,45 aqui
 			//qDebug()<<"Como ha pasado menos de 1 min y medio, sigo a la pared"; //aqui es donde tendre que poner lo de girar distinto en caso de follow wall para no evitar esquinas
-			if (left_min->distance2d > dist_threshold) {
-				last_state=State::TURN;
-				qDebug()<<"hago este girp";
-				return {State::FOLLOW_WALL, 1500.0, -0.5f};
+			if (left_min->distance2d > 450) {
+				return {State::FOLLOW_WALL, 2000.0, -0.75f};
 			}
-			last_state=State::TURN;
-			qDebug()<<"hago este otro";
-			return {State::FOLLOW_WALL, 1500.0, 0.0f};
+			return {State::FOLLOW_WALL, 2000.0, 0.75f}; //igual es alejarme mucho
 		}
 		else {
-			qDebug()<<"Como ha pasado más de un min y medio, voy hacia delante";
 			if (!turning) {
 				turning = true;
 				last_turn_sign = -last_turn_sign;
 			}
 			turning= count % 3 == 0;
 			count++;
-			last_state=State::TURN;
 			return {State::FORWARD, 2000.0, 0};
 
 		}
 	}
 	else{
-		//qDebug()<<"Sigo en turn";
-		last_turn_sign = elapsed<=40 ? std::abs(last_turn_sign) : last_turn_sign;
-		qDebug()<<"Signo: "<<last_turn_sign;
-		last_state=State::TURN;
-		return{State::TURN, 0.0f, 3.0}; //por defecto sigo haciendo lo mismo
+		last_turn_sign = elapsed<=50 ? std::abs(last_turn_sign) : last_turn_sign;
+		if (last_state == State::FOLLOW_WALL) {
+			qDebug()<<"entro en el IF";
+			last_state=State::TURN; //Aqui no deberia cambiar
+			return{State::TURN, 1000.0f, 0.75}; //por defecto sigo haciendo lo mismo
+		}
+		else {
+			last_state=State::TURN;
+			qDebug()<<"entro en el else";
+			return{State::TURN, 0.0f, 2.5}; //por defecto sigo haciendo lo mismo
+		}
 	}
+	*/
+}
+
+std::tuple<State, float, float> SpecificWorker::turn_method1(const RoboCompLidar3D::TPoints& filter_data) {
+	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.1); //params.LIDAR_FRONT_SECTION = -10
+	auto frente_end = closest_lidar_index_to_given_angle(filter_data, 0.1); //params.LIDAR_FRONT_SECTION = +10
+	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(),
+		[](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
+
+	last_state = State::TURN_FORWARD;
+	float dist_threshold = rand(gen); //genero una distancia aleatoria
+	if (front_min->distance2d > dist_threshold) {
+		return {State::FORWARD, 3000.0, 0};
+	}
+
+	//Si no tengo margen suficiente sigo girando
+	return {State::TURN_FORWARD, 0.0, 3.0f};
+
+
+
+}
+
+std::tuple<State, float, float> SpecificWorker::turn_method2(const RoboCompLidar3D::TPoints& filter_data) { //en un principio esta bien, hacer que cuando elapsed pase a forward
+	static auto start_time = std::chrono::steady_clock::now();
+	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.1); //params.LIDAR_FRONT_SECTION = -10
+	auto frente_end = closest_lidar_index_to_given_angle(filter_data, 0.1); //params.LIDAR_FRONT_SECTION = +10
+	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(),
+		[](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
+
+	auto left_begin = closest_lidar_index_to_given_angle(filter_data, -M_PI/2 -0.01); //params.LIDAR_FRONT_SECTION = -10
+	auto left_end = closest_lidar_index_to_given_angle(filter_data, -M_PI/2  + 0.01); //params.LIDAR_FRONT_SECTION = +10
+	auto left_min=std::min_element(filter_data.begin()+left_begin.value(), filter_data.begin()+left_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
+
+	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+					   std::chrono::steady_clock::now() - start_time)
+					   .count();
+	last_state = State::TURN_FORWARD;
+	qDebug()<<left_min->distance2d;
+	float rot = left_min->distance2d < 340 ? 1.5:0;
+	if (front_min -> distance2d > 600) {
+		last_state=State::TURN_FOLLOW;
+		qDebug()<<"rot es: "<<rot;
+		return {State::FOLLOW_WALL, 1500.0, rot};
+	}
+	if (elapsed <= 50)
+		return {State::TURN_FOLLOW, 0.0, 2.0f}; //giro menos
+	else
+		return {State::TURN_FORWARD, 0.0, 3.0f}; //aun no pasa a forward cuando elapsed
 }
 
 std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& filter_data) {
@@ -469,44 +531,64 @@ std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCom
 	Eigen::Vector2f P_front(front_min->x, front_min->y);
 	float dist_corner = (P_left - P_front).norm();
 	bool esquina = (dist_corner < 2000) && !((std::abs(left_min->z - front_min->z) < 120));
-	qDebug()<<"La distancia calculada entre puntos es: "<<dist_corner;
+	last_state=State::FOLLOW_WALL;
 	if (!(front_min->distance2d < 650) && !(left_min->distance2d < 500) && dist_corner < 2000) {
-		qDebug()<<"Esquina??"<<"////"<<left_min->x<<"-"<<left_min->y<<"-"<<left_min->z<<"///"<<front_min->x<<"-"<<front_min->y<<"-"<<front_min->z; //el problema son las Z
-		last_state=State::FOLLOW_WALL;
 		return {State::FOLLOW_WALL, 1500.0, -1.5f}; //sigo palante pero girando para cubrir la esquina
 	}
-	if (left_min->distance2d > 450) {
-		qDebug()<<"entro en este";
-		last_state=State::FOLLOW_WALL;
-		return {State::TURN, 1500.0f, -3.0f};
+	float left_threshold = left_end.value()-left_begin.value() < 10 ? 600 : 450;
+	if (left_min->distance2d > left_threshold) {
+		return {State::TURN_FOLLOW, 1500.0f, -0.75f};
 	}
-	qDebug()<<"Llego al ultimo return";
-	last_state=State::FOLLOW_WALL;
-	return {State::TURN, 850.0, 0.15f}; //giro suave para no tener que volver a corregir la trayectoria pronto
+	return {State::TURN_FOLLOW, 850.0, 0.15f}; //giro suave para no tener que volver a corregir la trayectoria pronto
 }
 
 std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLidar3D::TPoints& filter_data) {
-	//TODO
-	static auto start_time = std::chrono::steady_clock::now();
-	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.1); //params.LIDAR_FRONT_SECTION = -10
-	auto frente_end = closest_lidar_index_to_given_angle(filter_data, 0.1); //params.LIDAR_FRONT_SECTION = +10
-	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
-	if (front_min->distance2d<MIN_TO_WALL) { //TODO: PROBAR ESTO CON 2D, PROBAR TODO CON EL SWEEPER, AJUSTAR, Y LUEGO EL OBSTACULO
-		qDebug()<<"Salgo de espiral";
-		return{State::TURN, 0.0, 3.0f};
+
+	const float min_distance = 600.0f;  // mm (detección obstáculo)
+	const float a = 50.0f;               // mm (radio inicial)
+	const float max_r = 5000.0f;        // mm (radio máximo)
+	const float dt = 0.01f;             // periodo de compute -> 1/100Hz
+
+	// --- Medir obstáculo frontal ---
+	auto front_begin = closest_lidar_index_to_given_angle(filter_data, -0.1);
+	auto front_end = closest_lidar_index_to_given_angle(filter_data, 0.1);
+	auto front_min = std::min_element(filter_data.begin()+front_begin.value(), filter_data.begin()+front_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
+
+	if(front_min->distance2d < min_distance)
+	{
+		static float theta = 0.0f;
+		theta = 0.0f;  // reinicia la espiral
+		return {State::TURN_FOLLOW, 0.0f, 3.0f};
 	}
 
-	static float dv = 1.0f;
-	static float dr = 0.0f;
-	constexpr float ddr = 5.0f;
-	constexpr float ddv = 0.001f;
+	// --- Variables persistentes ---
+	static float theta = 0.001f;  // rad
+	static float r = a;         // mm
+	static float v = 1150.0f;        // mm/s (velocidad lineal)
+	static float b = 350.0f;              // mm/rad (separación entre vueltas) //bueno 250
 
-	dv = std::clamp(dv-ddv, 0.f, 1.f);
-	dr = std::clamp(dr + ddr , 0.f, 1000.f);
 
-	// evitar que w se vuelva negativa o cero
-	last_state=State::SPIRAL;
-	return{State::SPIRAL, dr,dv};
+	r = a + b * theta;
+
+	if(r > 1000.0f){
+		qDebug() << r;
+		v = v + 0.9f;
+		b = 400.0f; //bueno 300
+	}
+	float w = v / std::sqrt(b*b + r*r);  // rad/s
+
+
+	theta += w * dt;
+
+	// --- Fin de la espiral ---
+	if(r >= max_r)
+	{
+		theta = 0.0f;
+		return {State::TURN_FOLLOW, 0.0f, 3.0f};
+	}
+
+	// --- Resultado ---
+	return {State::SPIRAL, v, w};
 
 }
 /**************************************/
