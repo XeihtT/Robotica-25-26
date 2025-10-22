@@ -484,20 +484,16 @@ std::tuple<State, float, float> SpecificWorker::turn_follow_method(const RoboCom
 	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
 					   std::chrono::steady_clock::now() - start_time)
 					   .count();
-	qDebug()<<left_min->distance2d;
-	float rot = left_min->distance2d < 340 ? 1.5:0; //ha de ser 0 sino es terrible -> sigue ocurriendo lo de stuckearse en un muro (deberia funcionar como esta, pero produce lo de la ultima captura de pantalla)
+	float rot = left_min->distance2d < 340 ? 0.85:0; //ha de ser 0 sino es terrible -> sigue ocurriendo lo de stuckearse en un muro (deberia funcionar como esta, pero produce lo de la ultima captura de pantalla)
 	//probar a poner a 1 en vez de a 1.5
 	if (front_min -> distance2d > MIN_TO_WALL) { //MIN_TO_WALL -> 600 (asi funciona decente) //TODO APLICAR ESTE CAMBIO
-		qDebug()<<"rot es: "<<rot;
 		return {State::FOLLOW_WALL, 1500.0, rot};
 	}
 
-	State s = elapsed <= 50 ? State::TURN_FOLLOW : State::TURN_FORWARD;
-	//if (elapsed <= 50)
-	qDebug()<<"el return de 2";
-		return {State::TURN_FOLLOW, 0.0, 3.0f}; //giro menos
-	//else
-	//	return {State::TURN_FORWARD, 0.0, 3.0f}; //aun no pasa a forward cuando elapsed
+	State s = elapsed <= 45 ? State::TURN_FOLLOW : State::TURN_FORWARD;
+	qDebug()<<"ultimo return";
+	return {s, 0.0, 3.0f}; //giro menos
+
 }
 
 std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& filter_data) {
@@ -541,7 +537,7 @@ std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCom
 		return {State::TURN_FOLLOW, 1500.0f, -0.75f};
 	}
 	qDebug()<<"sigo devolviendo el otro return----"<<left_min->distance2d<<"//////"<<left_threshold<<"////////"<<front_min->distance2d; //todo: ultima captura de pantalla relativa a estos datos y alchoque, arreglar
-	return {State::TURN_FOLLOW, 1500.0, 1.5f}; //giro suave para no tener que volver a corregir la trayectoria pronto
+	return {State::TURN_FOLLOW, 1500.0, 0.85f}; //giro suave para no tener que volver a corregir la trayectoria pronto
 }
 
 std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLidar3D::TPoints& filter_data) {
