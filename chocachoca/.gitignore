@@ -1,6 +1,7 @@
 build/
 CMakeFiles/
 CMakeCache.txt
+Makefile
 .idea
 .qt
 cmake_install.cmake
