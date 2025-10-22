@@ -142,8 +142,8 @@ private:
 	std::tuple<State, float, float> follow_wall_method(const RoboCompLidar3D::TPoints& points);
 	std::tuple<State, float, float> spiral_method(const RoboCompLidar3D::TPoints& points);
 
-	std::tuple<State, float, float> turn_method1(const RoboCompLidar3D::TPoints& filter_data);
-	std::tuple<State, float, float> turn_method2(const RoboCompLidar3D::TPoints& points);
+	std::tuple<State, float, float> turn_forward_method(const RoboCompLidar3D::TPoints& filter_data);
+	std::tuple<State, float, float> turn_follow_method(const RoboCompLidar3D::TPoints& points);
 	RoboCompLidar3D::TPoints filtro_datos();
 
 	std::expected<int, std::string> closest_lidar_index_to_given_angle(const auto &points, float angle);
