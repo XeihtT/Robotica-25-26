@@ -40,7 +40,8 @@
 #include <genericworker.h>
 #include <abstract_graphic_viewer/abstract_graphic_viewer.h>
 #include <ranges>
-#include <webots/Robot.hpp>
+// #include <webots/Robot.hpp>
+#include "/usr/local/webots/include/controller/cpp/webots/Robot.hpp"
 #include "cppitertools/itertools.hpp"
 #include <random>
 #include <cmath>
@@ -121,6 +122,7 @@ private:
 	std::random_device rd;
 	std::mt19937 gen;
 	std::uniform_real_distribution<float> rand;
+	std::uniform_int_distribution<int> rand_turn_way;
 
 	// graphics
 
@@ -138,7 +140,6 @@ private:
 	std::tuple<float, float> update_robot_state(const RoboCompLidar3D::TPoints& points);
 
 	std::tuple<State, float, float> forward_method(const RoboCompLidar3D::TPoints& points);
-	std::tuple<State, float, float> turn_method(const RoboCompLidar3D::TPoints& points);
 	std::tuple<State, float, float> follow_wall_method(const RoboCompLidar3D::TPoints& points);
 	std::tuple<State, float, float> spiral_method(const RoboCompLidar3D::TPoints& points);
 
