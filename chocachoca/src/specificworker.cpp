@@ -19,13 +19,10 @@
 #include "specificworker.h"
 
 const float MIN_TO_WALL = 760.0f; //Distancia minima que el robot tendra a una pared antes de que este empiece a girar
-bool new_turn = false;
 int turn_way = 1;
-State last_state = State::SPIRAL;
-float follow_wall_time = 50; //cuantos segundos está en follow wall antes de pasar a forward
 
 //Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
-SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx), gen(rd()), rand(3200,4200), rand_turn_way(1, 2)
+SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx), gen(rd()), rand(2800,3800), rand_turn_way(1, 2)
 { //igual deberia ponerle rand (MIN_TO_WALL, 2200) o mas de 2200
 	this->startup_check_flag = startup_check;
 	//inicializamos los atributos de generacion de numeros aleatorios
@@ -417,7 +414,7 @@ std::tuple<State, float, float> SpecificWorker::turn_forward_method(const RoboCo
 	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(),
 		[](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
 
-	last_state = State::TURN_FORWARD;
+
 	float dist_threshold = rand(gen); //genero una distancia aleatoria
 	if (front_min->distance2d > dist_threshold) { //esto es optimo?
 		return {State::FORWARD, 1000.0, 0};
@@ -444,14 +441,12 @@ std::tuple<State, float, float> SpecificWorker::turn_follow_method(const RoboCom
 	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
 					   std::chrono::steady_clock::now() - start_time)
 					   .count();
-	float rot = left_min->distance2d < 420 ? 1:0; //ha de ser 0 sino es terrible -> sigue ocurriendo lo de stuckearse en un muro (deberia funcionar como esta, pero produce lo de la ultima captura de pantalla)
-	//probar a poner a 1 en vez de a 1.5
-
-	if (front_min -> distance2d > MIN_TO_WALL) { //MIN_TO_WALL -> 600 (asi funciona decente) //TODO APLICAR ESTE CAMBIO
+	float rot = left_min->distance2d < 420 ? 1:0; //420 umbral minimo
+	if (front_min -> distance2d > MIN_TO_WALL) { //
 		return {State::FOLLOW_WALL, 1000.0, rot}; //si la distancia por la izquierda es tambien pequeña, gira a la derecha un poco
 	}
 
-	State s = elapsed <= 50 ? State::TURN_FOLLOW : State::TURN_FORWARD; //igual le tengo que dar más tiempo?
+	State s = elapsed <= 45 ? State::TURN_FOLLOW : State::TURN_FORWARD;
 	//qDebug()<<"ultimo return";
 	return {s, 0.0, 1.0f}; //con 1 es lento y con 3 demasiado rapido
 
@@ -469,44 +464,34 @@ std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCom
 	auto front_end = closest_lidar_index_to_given_angle(filter_data, 0.1);
 	auto front_min = std::min_element(filter_data.begin()+front_begin.value(), filter_data.begin()+front_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
 	//qDebug()<<front_begin.value()<<"----"<<front_end.value();
-	const float min_dist = MIN_TO_WALL;     // umbral de seguridad frontal (va aumentando para recorrer más)
-	static float max_extra_dist= 400.0f; //maximo que puede aumentar la distancia a pared //nose si era 240 o 340 el 7
-
-	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-					   std::chrono::steady_clock::now() - start_time)
-					   .count();
-	float period = 5.0f; //cada cuantos s hace un ciclo completo
-	float max_dist = 3000.0f;
-	float extra = std::clamp(max_extra_dist * ::sinf(M_PI*2*elapsed / period), 20.0f, 400.0f); //A pesar de que sinf devuelve algo en el rango
-	//[-1, 1], es necesario hacer el clamp porque en ocasiones sumada (o restaba) demasiado extra debido a problemas de desbordamiento, porque la funcion sin (antes de poner sinf)
-	//devuelve un double, y al tener tanta precision e intentar meterla en un float, desbordaba el signo y generaba valores muy grandes. Para evitar eso, he decidido usar std::clamp
-	//para limitar el valor y sinf para que devuelva la misma precisión y así no tener problemas de desbordamiento de signos
-	float desired_dist = min_dist + extra;
-	//bool esquina = front_min->distance2d < 1500 && left_min->distance2d < desired_dist;
-	//qDebug() <<front_min->x << "-" << front_min->y << "////"<<left_min->x<<","<<left_min->y;
+	static float max_error = 0;
 
 	Eigen::Vector2f P_left(left_min->x, left_min->y);
 	Eigen::Vector2f P_front(front_min->x, front_min->y);
 	float dist_corner = (P_left - P_front).norm();
-	bool esquina = (dist_corner < 2000) && !((std::abs(left_min->z - front_min->z) < 120));
-	last_state=State::FOLLOW_WALL;
+	const float k = 2; //como de rapido ajusta a 1
+
 	if (!(front_min->distance2d < MIN_TO_WALL) && !(left_min->distance2d < 600) && dist_corner < 2000) { //MIN_TO_WALL -> 650 (asi funciona decente)
 		return {State::FOLLOW_WALL, 1000.0, -1.0f}; //sigo palante pero girando para cubrir la esquina
 	}
-	float left_threshold = left_end.value()-left_begin.value() < 10 ? 600 : 450; //mas umbral para hacer los giros
+	float left_threshold = left_end.value()-left_begin.value() < 10 ? 600 : 450; //esta es la distancia
 	//medir la diferencia entre left min y threshold para girar mas o menos en funcion de si estoy mas cerca o mas lejos
-	//las velocidades y giros tienen que ser 1k y +-1 respectivamente
-	if (left_min->distance2d > left_threshold) { //aqui se choca
-		qDebug()<<"estoy volviendo a la pared";
-		if (front_min->distance2d < MIN_TO_WALL+30) //tengo que alejarme (le meto + 20 por si)
+	float dif = left_min->distance2d - left_threshold;// si la diferencia es mayor que X umbral, debo girar de nuevo a la izquierda
+	//si, por el contrario, la diferencia está entre 100 y el umbral X, sigo hacia adelante (magnitud 0)
+	float signo = dif > 300 ? -1.0f : 1.0f; //TODO ACABAR ESTO
+	max_error = max(max_error, dif);
+	if (dif > 0) { //left_min->distance2d > left_threshold
+		if (front_min->distance2d < MIN_TO_WALL+30)
 		{
-			qDebug()<<"Estoy haciendo el otro giro para no chocarme con la pared";
-			return {State::TURN_FOLLOW, 0.0f, 1.0f};//antes -0.75
+			return {State::TURN_FOLLOW, 0.0f, 1.0f};//para no chocarme en el follow wall
 		}
 		//si aun no he llegado al threshold y no me voy a chocar, puedo girar a la izquierda
-		return {State::TURN_FOLLOW, 1000.0f, -1.0f};//antes -0.75
+		float signo = dif > 200 ? -1.0f:1.0f; float magnitud = dif / 200;
+		qDebug()<<"rot es: "<<signo<<", magnitud es: "<<magnitud;
+		return {State::TURN_FOLLOW, 1000.0f, signo*magnitud};//en vez de volver a la pared por defecto siempre, tener una zona neutral:
+
 	}
-	//qDebug()<<"sigo devolviendo el otro return----"<<left_min->distance2d<<"//////"<<left_threshold<<"////////"<<front_min->distance2d; //todo: ultima captura de pantalla relativa a estos datos y alchoque, arreglar
+	qDebug()<<"salgo por el otro return";
 	return {State::TURN_FOLLOW, 1000.0, 1.0f}; //giro suave para no tener que volver a corregir la trayectoria pronto
 }
 

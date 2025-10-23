@@ -44,7 +44,7 @@
 #include "/usr/local/webots/include/controller/cpp/webots/Robot.hpp"
 #include "cppitertools/itertools.hpp"
 #include <random>
-#include <cmath>
+#include <math.h>
 #include<cppitertools/enumerate.hpp>
 #include <Eigen/Dense>
 #include "rapplication/rapplication.h"
