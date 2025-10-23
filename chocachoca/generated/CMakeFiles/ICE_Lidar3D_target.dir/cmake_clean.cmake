@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/robocomp/robotica/chocachoca/generated/Lidar3D.ice"
   "CMakeFiles/ICE_Lidar3D_target"
+  "Lidar3D.ice"
 )
 
 # Per-language clean rules from dependency scanning.
