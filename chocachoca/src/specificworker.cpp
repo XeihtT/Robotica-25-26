@@ -427,25 +427,24 @@ std::tuple<State, float, float> SpecificWorker::turn_follow_method(const RoboCom
 	auto front_min=std::min_element(filter_data.begin()+frente_begin.value(), filter_data.begin()+frente_end.value(),
 		[](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
 
-	auto left_begin = closest_lidar_index_to_given_angle(filter_data, -M_PI/2 -0.01); //params.LIDAR_FRONT_SECTION = -10
-	auto left_end = closest_lidar_index_to_given_angle(filter_data, -M_PI/2  + 0.01); //params.LIDAR_FRONT_SECTION = +10
+	auto left_begin = closest_lidar_index_to_given_angle(filter_data, -M_PI/2 -0.02); //params.LIDAR_FRONT_SECTION = -10
+	auto left_end = closest_lidar_index_to_given_angle(filter_data, -M_PI/2  + 0.02); //params.LIDAR_FRONT_SECTION = +10
 	auto left_min=std::min_element(filter_data.begin()+left_begin.value(), filter_data.begin()+left_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
 
 	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
 					   std::chrono::steady_clock::now() - start_time)
 					   .count();
-	float diff = left_min -> distance2d - 420;
+	float diff = left_min -> distance2d - 440;
 	float rot = std::clamp((std::abs(diff)-400.0f) / (350.0f-50.0f), 0.0f, 1.0f); //no es lo mismo std::abs(diff) que std::abs(diff-150.0f)
-	float signo = diff < 0 ? 0.015 : -0.10;
+	float signo = diff < 0 ? 0.015 : -0.15;
 	qDebug()<<"la distancia por la izquierda en turn follow es: "<<left_min->distance2d;
 	if (front_min -> distance2d > MIN_TO_WALL) { //
-		//qDebug()<<"giro";
 		return {State::FOLLOW_WALL, 1000.0, signo}; //es poquisimo xd
 		return {State::FOLLOW_WALL, 1000.0, rot*signo}; //si la distancia por la izquierda es tambien pequeña, gira a la derecha un poco
 	}
 	//probar con rotacion constante de 0.25 - 0.10 pruebo luego en clase
 	State s = elapsed <= 40 ? State::TURN_FOLLOW : State::TURN_FORWARD;
-	if (elapsed <= 50 ) {
+	if (elapsed <= 45 ) {
 		s = State::TURN_FOLLOW;
 		rot = 1.0f;
 	}
@@ -465,8 +464,8 @@ std::tuple<State, float, float> SpecificWorker::turn_follow_method(const RoboCom
 std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& filter_data) {
 	//TODO: MEJORAR PARA EVITAR CICLOS EN OBSTACULOS
 	static auto start_time = std::chrono::steady_clock::now();
-	auto left_begin = closest_lidar_index_to_given_angle(filter_data, -M_PI/2 -0.01); //params.LIDAR_FRONT_SECTION = -10
-	auto left_end = closest_lidar_index_to_given_angle(filter_data, -M_PI/2  + 0.01); //params.LIDAR_FRONT_SECTION = +10
+	auto left_begin = closest_lidar_index_to_given_angle(filter_data, -M_PI/2 -0.02); //params.LIDAR_FRONT_SECTION = -10
+	auto left_end = closest_lidar_index_to_given_angle(filter_data, -M_PI/2  + 0.02); //params.LIDAR_FRONT_SECTION = +10
 	auto left_min=std::min_element(filter_data.begin()+left_begin.value(), filter_data.begin()+left_end.value(), [](const auto& a, const auto& b){return a.distance2d<b.distance2d;});
 
 	auto front_begin = closest_lidar_index_to_given_angle(filter_data, -0.1);
@@ -492,10 +491,10 @@ std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCom
 	qDebug()<<"la distancia por la izquierda en follow wall es: "<<left_min->distance2d;
 	//Si llego aquí es porque no voy a  chocarme con la pared de frente
 	float left_threshold = left_end.value()-left_begin.value() < 10 ? 400 : 250; //esta es la distancia (antes 600-450) mas o menos va bien
-	left_threshold=420;
+	left_threshold=440;
 	float diff = left_min->distance2d - left_threshold;// si la diferencia es mayor que X umbral, debo girar de nuevo a la izquierda
 	//la magnitud del giro vendra del valor absoluto de diff (cuanto mayor, mas cercano a 1)
-	float signo2 = diff < 0 ? 0.025 : -0.10;
+	float signo2 = diff < 0 ? 0.015 : -0.15;
 	//ahora mismo medio funciona, pero deberia cambiar la zona muerta porque se sigue abriendo mucho
 	//qDebug()<<"la diferencia es: "<<diff; //ajustar dependiendo de esta salida
 	if (diff >= 0.0 && diff< 50.0) { //esta es la zona muerta -> bajarla (antes 50-150)
