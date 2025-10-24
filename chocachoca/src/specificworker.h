@@ -116,7 +116,7 @@ private:
      * \brief Flag indicating whether startup checks are enabled.
      */
 	bool startup_check_flag;
-	State state = State::SPIRAL;
+	State state = State::FORWARD;
 
 	//Random nums:
 	std::random_device rd;
