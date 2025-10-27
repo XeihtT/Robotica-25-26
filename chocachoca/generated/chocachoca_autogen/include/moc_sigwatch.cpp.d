@@ -1,5 +1,5 @@
-/home/usuario/roboticaG5/Robotica-25-26/chocachoca/generated/chocachoca_autogen/include/moc_sigwatch.cpp: /home/usuario/robocomp/classes/sigwatch/sigwatch.h \
-  /home/usuario/roboticaG5/Robotica-25-26/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
+/home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/include/moc_sigwatch.cpp: /home/xeihtt/robocomp/classes/sigwatch/sigwatch.h \
+  /home/xeihtt/robotica/chocachoca/generated/chocachoca_autogen/moc_predefs.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \

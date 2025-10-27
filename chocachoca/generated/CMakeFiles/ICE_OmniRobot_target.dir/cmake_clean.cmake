@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
+  "/home/robocomp/robotica/chocachoca/generated/OmniRobot.ice"
   "CMakeFiles/ICE_OmniRobot_target"
-  "OmniRobot.ice"
 )
 
 # Per-language clean rules from dependency scanning.
