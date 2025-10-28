@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/xeihtt/robotica/localiser/build/cmake_install.cmake",
+		"/home/xeihtt/robotica/localiser/build/generated/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
