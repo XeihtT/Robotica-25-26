@@ -44,14 +44,14 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/xeihtt/robocomp/etc-default/chocachoca.conf")
+   "/home/xeihtt/robocomp/etc-default/localiser.conf")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/xeihtt/robocomp/etc-default" TYPE FILE RENAME "chocachoca.conf" FILES "/home/xeihtt/robotica/localiser/etc/config")
+  file(INSTALL DESTINATION "/home/xeihtt/robocomp/etc-default" TYPE FILE RENAME "localiser.conf" FILES "/home/xeihtt/robotica/localiser/etc/config")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)

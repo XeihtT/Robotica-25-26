@@ -199,7 +199,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=chocachoca
+CMAKE_PROJECT_NAME:STATIC=localiser
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
@@ -584,6 +584,15 @@ chocachoca_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 chocachoca_SOURCE_DIR:STATIC=/home/xeihtt/robotica/localiser
+
+//Value Computed by CMake
+localiser_BINARY_DIR:STATIC=/home/xeihtt/robotica/localiser/build
+
+//Value Computed by CMake
+localiser_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+localiser_SOURCE_DIR:STATIC=/home/xeihtt/robotica/localiser
 
 //Path to a library.
 pkgcfg_lib_PKG_XKB_xkbcommon:FILEPATH=/usr/lib/x86_64-linux-gnu/libxkbcommon.so
