@@ -77,17 +77,29 @@ void SpecificWorker::initialize()
 {
     std::cout << "initialize worker" << std::endl;
 
+	robot_pose.setIdentity();
+	robot_pose.translate(Eigen::Vector2d(0,0));
     //initializeCODE
 
 
 	this->dimensions = QRectF(-6000, -3000, 12000, 6000);
-	viewer = new AbstractGraphicViewer(this->frame, this->dimensions);
+	viewer1 = new AbstractGraphicViewer(this->frame, this->dimensions);
 	this->resize(900,450);
-	viewer->show();
-	const auto rob = viewer->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
-	robot_polygon = std::get<0>(rob);
-	connect(viewer, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
+	viewer1->show();
+	const auto rob1 = viewer1->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
+	robot_polygon = std::get<0>(rob1);
+	connect(viewer1, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
 
+
+
+
+	this->dimensions = QRectF(-6000, -3000, 12000, 6000);
+	viewer2 = new AbstractGraphicViewer(this->frame, this->dimensions);
+	this->resize(900,450);
+	viewer2->show();
+	const auto rob2 = viewer2->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
+	robot_polygon = std::get<0>(rob2);
+	connect(viewer2, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
 
     /////////GET PARAMS, OPEND DEVICES....////////
     //int period = configLoader.get<int>("Period.Compute") //NOTE: If you want get period of compute use getPeriod("compute")
@@ -97,18 +109,40 @@ void SpecificWorker::initialize()
 
 
 
+
 void SpecificWorker::compute()
 {
 
 	RoboCompLidar3D::TPoints filter_data = filtro_datos();
-	std::tuple<float, float> velocidades = update_robot_state(filter_data);
+	//qDebug() << "filter_data size: " << filter_data.size();
+/*	std::tuple<float, float> velocidades = update_robot_state(filter_data);
 	try {
 		omnirobot_proxy->setSpeedBase(0.0, std::get<0>(velocidades), std::get<1>(velocidades)); //le hago el setSpeedBase
 	}catch (const Ice::Exception &e){std::cout<<e.what()<<std::endl; return;}
+*/
+	// corners
+	auto corners = room_detector.compute_corners(filter_data, &viewer1->scene);
+	for (auto &[c, _, __] : corners)
+		qDebug() << c;
+
+	for (auto &[c, _, __] : room.corners)
+		qDebug() << c;
+		qDebug() << "______________________________";
+
+	//match
+	auto match = hungarian.match(corners, room.corners, 1000);
+	for (auto &m : match)
+	{
+		qDebug() << std::get<0>(std::get<0>(m)).x() << " " << std::get<0>(std::get<0>(m)).y();
+		qDebug() << std::get<0>(std::get<1>(m)).x() << " " << std::get<0>(std::get<1>(m)).y();
+	}
+
+
 
 
 	//cuando la diferencia de z es menos de 120
 }
+
 void SpecificWorker::emergency()
 {
     std::cout << "Emergency worker" << std::endl;
@@ -260,7 +294,7 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos() {
 		p_filter = filter_isolated_points(data.points, 100);
 
 		if (!p_filter.empty()) {
-			draw_lidar(p_filter, &viewer->scene);
+			draw_lidar(p_filter, &viewer1->scene);
 		}
 		else {
 			return p_filter; //nos aseguramos de que vamos a llamar a update_robot_state() con valores validos

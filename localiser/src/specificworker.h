@@ -48,6 +48,8 @@
 #include<cppitertools/enumerate.hpp>
 #include <Eigen/Dense>
 #include "rapplication/rapplication.h"
+#include "room_detector.h"
+#include "hungarian.h"
 
 
 /**
@@ -73,6 +75,12 @@ public:
      */
 	~SpecificWorker();
 
+
+struct Room
+{
+	Corners corners{{QPointF{-5000, 2500},0,0},{QPointF{5000, 2500},0,0},{QPointF{-5000, 2500},0,0},{QPointF{-5000, -2500},0,0}};
+
+};
 
 public slots:
 
@@ -126,10 +134,20 @@ private:
 
 	// graphics
 
+	//room
+	rc::Room_Detector room_detector;
+	Room room;
+
+
+	//robot
+	Eigen::Affine2d robot_pose;
+	//match
+	rc::Hungarian hungarian;
+
 	//Chocachoca todo lo de abajo:
 	QRectF dimensions;
 
-	AbstractGraphicViewer *viewer;
+	AbstractGraphicViewer *viewer1, *viewer2;
 	const int ROBOT_LENGTH = 400;
 	QGraphicsPolygonItem *robot_polygon;
 

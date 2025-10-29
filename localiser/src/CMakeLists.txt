@@ -1,11 +1,17 @@
 # Sources set
 LIST(APPEND SOURCES
   ../src/specificworker.cpp
+        ../src/room_detector.cpp
+        ../src/ransac_line_detector.cpp
+        ../src/hungarian.cpp
 )
 
 # Headers set
 LIST(APPEND HEADERS
   ../src/specificworker.h
+        ../src/room_detector.h
+        ../src/ransac_line_detector.h
+        ../src/hungarian.h
 )
 
 SET (LIBS ${LIBS}  tbb)
