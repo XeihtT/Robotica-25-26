@@ -48,6 +48,8 @@
 #include<cppitertools/enumerate.hpp>
 #include <Eigen/Dense>
 #include "rapplication/rapplication.h"
+#include "room_detector.h"
+#include "hungarian.h"
 
 
 /**
@@ -72,6 +74,38 @@ public:
      * \brief Destructor for SpecificWorker.
      */
 	~SpecificWorker();
+
+
+
+	struct NominalRoom {
+		float width;   // mm
+		float length;  // mm
+		Corners corners;
+
+		explicit NominalRoom(
+			float width_ = 10000.f,
+			float length_ = 5000.f,
+			Corners corners_ = {}
+		) : width(width_), length(length_), corners(std::move(corners_)) {}
+
+		// Transforma las esquinas con una matriz de transformación
+		// Para pasar de habitación a robot, usa el inverso de robot_pose
+		Corners transform_corners_to(const Eigen::Affine2d &transform) const {
+			Corners transformed_corners;
+			for (const auto &[p, _, __] : corners) {
+				Eigen::Vector2d ep(p.x(), p.y());
+				Eigen::Vector2d tp = transform * ep;
+				transformed_corners.emplace_back(
+					QPointF(static_cast<float>(tp.x()), static_cast<float>(tp.y())),
+					0.f,
+					0.f
+				);
+			}
+			return transformed_corners;
+		}
+	};
+
+
 
 
 public slots:
@@ -126,10 +160,28 @@ private:
 
 	// graphics
 
+	//room
+	rc::Room_Detector room_detector;
+	NominalRoom room{
+		10000.f, 5000.f,
+		{
+	        {QPointF{-5000.f, -2500.f}, 0.f, 0.f},
+			{QPointF{ 5000.f, -2500.f}, 0.f, 0.f},
+			{QPointF{ 5000.f,  2500.f}, 0.f, 0.f},
+			{QPointF{-5000.f,  2500.f}, 0.f, 0.f}
+		}
+	};
+
+
+	//robot
+	Eigen::Affine2d robot_pose;
+	//match
+	rc::Hungarian hungarian;
+
 	//Chocachoca todo lo de abajo:
 	QRectF dimensions;
 
-	AbstractGraphicViewer *viewer;
+	AbstractGraphicViewer *viewer1, *viewer2;
 	const int ROBOT_LENGTH = 400;
 	QGraphicsPolygonItem *robot_polygon;
 
