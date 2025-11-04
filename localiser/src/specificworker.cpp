@@ -72,7 +72,6 @@ SpecificWorker::~SpecificWorker()
 	std::cout << "Destroying SpecificWorker" << std::endl;
 }
 
-
 void SpecificWorker::initialize()
 {
     std::cout << "initialize worker" << std::endl;
@@ -85,21 +84,18 @@ void SpecificWorker::initialize()
 	this->dimensions = QRectF(-6000, -3000, 12000, 6000);
 	viewer1 = new AbstractGraphicViewer(this->frame, this->dimensions);
 	this->resize(900,450);
-	viewer1->show();
+	//viewer1->show();
 	const auto rob1 = viewer1->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
 	robot_polygon = std::get<0>(rob1);
 	connect(viewer1, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
 
-
-
-
-	this->dimensions = QRectF(-6000, -3000, 12000, 6000);
-	viewer2 = new AbstractGraphicViewer(this->frame, this->dimensions);
+	viewer2 = new AbstractGraphicViewer(this->frame_room, room.rect);
 	this->resize(900,450);
-	viewer2->show();
 	const auto rob2 = viewer2->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
 	robot_polygon = std::get<0>(rob2);
 	connect(viewer2, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
+	viewer2->scene.addRect(room.rect, QPen(QColor("magenta"), 30));
+	//viewer2->show();
 
     /////////GET PARAMS, OPEND DEVICES....////////
     //int period = configLoader.get<int>("Period.Compute") //NOTE: If you want get period of compute use getPeriod("compute")
@@ -107,74 +103,56 @@ void SpecificWorker::initialize()
 
 }
 
-
-
-
 void SpecificWorker::compute()
 {
+	// read lidar
+	const RoboCompLidar3D::TPoints filter_data = filtro_datos();
+	draw_lidar(filter_data, &viewer1->scene);
 
-	RoboCompLidar3D::TPoints filter_data = filtro_datos();
-	//qDebug() << "filter_data size: " << filter_data.size();
-/*	std::tuple<float, float> velocidades = update_robot_state(filter_data);
-	try {
-		omnirobot_proxy->setSpeedBase(0.0, std::get<0>(velocidades), std::get<1>(velocidades)); //le hago el setSpeedBase
-	}catch (const Ice::Exception &e){std::cout<<e.what()<<std::endl; return;}
-*/
 	// corners
-	auto corners = room_detector.compute_corners(filter_data, &viewer1->scene);
-
-	if (corners.empty())
-		qDebug() << "No corners detected";
-
-	for (auto &[c, _, __] : corners)
-		qDebug() << c;
-
-	for (auto &[c, _, __] : room.corners)
-		qDebug() << c;
-		qDebug() << "______________________________";
+	const auto corners = room_detector.compute_corners(filter_data, &viewer1->scene);
 
 	//match
-	auto match = hungarian.match(corners, room.corners, 1000);
-	for (auto &m : match)
+	auto cr = room.transform_corners_to(robot_pose.inverse());
+	for (const auto &[cn, cm] : iter::zip(cr, corners))
+		if (std::isnan(std::get<QPointF>(cn).x()) or std::isnan(std::get<QPointF>(cn).y()) or
+			std::isnan(std::get<QPointF>(cm).x()) or std::isnan(std::get<QPointF>(cm).y()))
+			return;
+
+	const auto match = hungarian.match(corners,cr, 1000);
+
+	// make matrix
+	Eigen::MatrixXd W(match.size()*2, 3);
+	Eigen::VectorXd b(match.size()*2);
+	for (const auto &[i, m] : match | iter::enumerate)
 	{
-		qDebug() << std::get<0>(std::get<0>(m)).x() << " " << std::get<0>(std::get<0>(m)).y();
-		qDebug() << std::get<0>(std::get<1>(m)).x() << " " << std::get<0>(std::get<1>(m)).y();
+		auto &[cm, cn, d] = m;
+		auto &[cmc, _, __] = cm;
+		auto &[cnc, ___, ____] = cn;
+		W(i,0) = 1.0;
+		W(i,1) = 0.0;
+		if (i%2 == 0)
+		{
+			W(i,2) = -cmc.y();
+			b(i) = cnc.x() - cmc.x();
+		}
+		else
+		{
+			W(i,2) = cmc.x();
+			b(i) = cnc.y() - cmc.y();
+		}
 	}
+	// operate
+	const auto r = (W.transpose()*W).inverse()*W.transpose() * b;
 
+	// update robot pose
+	robot_pose.translate(Eigen::Vector2d(r(0), r(1)));
+	robot_pose.rotate(r(2));
 
-
-
-	//cuando la diferencia de z es menos de 120
+	// update robot draw
+	robot_polygon->setPos(r(0), r(1));
+	robot_polygon->setRotation(r(2));
 }
-
-void SpecificWorker::emergency()
-{
-    std::cout << "Emergency worker" << std::endl;
-    //emergencyCODE
-    //
-    //if (SUCCESSFUL) //The componet is safe for continue
-    //  emmit goToRestore()
-}
-
-
-
-//Execute one when exiting to emergencyState
-void SpecificWorker::restore()
-{
-    std::cout << "Restore worker" << std::endl;
-    //restoreCODE
-    //Restore emergency component
-
-}
-
-
-int SpecificWorker::startup_check()
-{
-	std::cout << "Startup check" << std::endl;
-	QTimer::singleShot(200, QCoreApplication::instance(), SLOT(quit()));
-	return 0;
-}
-
 
 std::expected<int, std::string> SpecificWorker::closest_lidar_index_to_given_angle(const auto &points, float angle)
 {
@@ -188,9 +166,6 @@ std::expected<int, std::string> SpecificWorker::closest_lidar_index_to_given_ang
 	else
 		return std::unexpected("No closest value found in method <closest_lidar_index_to_given_angle>");
 }
-
-
-
 void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points, QGraphicsScene *scene)
 {
     static std::vector<QGraphicsItem*> items;   // store items so they can be shown between iterations
@@ -272,20 +247,18 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
     items.push_back(line1);
     items.push_back(line2);
 }
-
-
-
 void SpecificWorker::new_target_slot(QPointF p)
 {
 	std::cout << "Nuevo target recibido en: ("
 			  << p.x() << ", " << p.y() << ")" << std::endl;
 }
-RoboCompLidar3D::TPoints SpecificWorker::filtro_datos() {
-
+RoboCompLidar3D::TPoints SpecificWorker::filtro_datos()
+{
 	std::optional<RoboCompLidar3D::TPoints> filter_data;
 	RoboCompLidar3D::TPoints  p_filter;
-	try {
-		auto data = lidar3d_proxy->getLidarData("bpearl", 0, 2*M_PI, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+	try
+	{
+		auto data = lidar3d_proxy->getLidarData("helios", 0, 2*M_PI, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		//qInfo() << "Size: "<<data.points.size();
 		if (data.points.empty()){qDebug()<<"No points"; return p_filter;}
 
@@ -295,18 +268,13 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos() {
 		*/
 
 		//Esto siguiente es opcional
-		p_filter = filter_isolated_points(data.points, 100);
+		//p_filter = filter_isolated_points(data.points, 100);
+		// if (p_filter.empty())
+		// 	return {};
 
-		if (!p_filter.empty()) {
-			draw_lidar(p_filter, &viewer1->scene);
-		}
-		else {
-			return p_filter; //nos aseguramos de que vamos a llamar a update_robot_state() con valores validos
-		}
-
-	}catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return p_filter;}
-
-	return p_filter;
+		return data.points;
+	}
+	catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return p_filter;}
 }
 std::optional<RoboCompLidar3D::TPoints> SpecificWorker::filter_min_distance_cppitertools(const RoboCompLidar3D::TPoints& points) {
 
@@ -359,7 +327,6 @@ RoboCompLidar3D::TPoints SpecificWorker::filter_isolated_points(const RoboCompLi
 			result.push_back(points[i]);
 	return result;
 }
-
 void SpecificWorker::update_robot_position() {
 	try {
 		RoboCompGenericBase::TBaseState bState;
@@ -371,8 +338,6 @@ void SpecificWorker::update_robot_position() {
 	}
 	catch (const Ice::Exception& e){std::cout<<e.what();}
 }
-
-
 std::tuple<float, float> SpecificWorker::update_robot_state(const RoboCompLidar3D::TPoints& points) {
 	std::tuple<State, float, float> result;
 	switch (this->state) {
@@ -397,8 +362,6 @@ std::tuple<float, float> SpecificWorker::update_robot_state(const RoboCompLidar3
 	this->state=std::get<State>(result);
 	return {std::get<1> (result), std::get<2>(result)};
 }
-
-
 std::tuple<State, float, float> SpecificWorker::forward_method(const RoboCompLidar3D::TPoints& filter_data) {
 	//Obtenemos el índice de filter data correspondiente a la pared más cercana por el frente del robot
 	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.2);
@@ -422,7 +385,6 @@ std::tuple<State, float, float> SpecificWorker::forward_method(const RoboCompLid
 	}
 	return {State::FORWARD, 1000.0, 0}; //por defecto sigo hacia adelante
 }
-
 std::tuple<State, float, float> SpecificWorker::turn_forward_method(const RoboCompLidar3D::TPoints& filter_data) {
 	//Obtenemos el mínimo por delante del robot
 	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.2);
@@ -438,7 +400,6 @@ std::tuple<State, float, float> SpecificWorker::turn_forward_method(const RoboCo
 	//Si no tengo margen suficiente sigo girando
 	return {State::TURN_FORWARD, 0.0, turn_way};
 }
-
 std::tuple<State, float, float> SpecificWorker::turn_follow_method(const RoboCompLidar3D::TPoints& filter_data) { //en un principio esta bien, hacer que cuando elapsed pase a forward
 	//Miro el frente del robot
 	auto frente_begin = closest_lidar_index_to_given_angle(filter_data, -0.2);
@@ -460,7 +421,6 @@ std::tuple<State, float, float> SpecificWorker::turn_follow_method(const RoboCom
 	}
 	return {State::TURN_FOLLOW, 0.0, 1.0f}; //por defecto sigo girando
 }
-
 std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCompLidar3D::TPoints& filter_data) {
 	//Empiezo a medir el tiempo desde que se llama al método por primera vez
 	static auto start_time = std::chrono::steady_clock::now();
@@ -492,7 +452,6 @@ std::tuple<State, float, float> SpecificWorker::follow_wall_method(const RoboCom
 	float signo = diff < 15 ? 0.08 : -0.20;
 	return {which_turn, 1000.0, signo}; //En caso de no estar en zona muerta, calculo qué giro debo hacer para no chocar por la izquierda y lo hago
 }
-
 std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLidar3D::TPoints& filter_data) {
 	//Miro el frente del robot para no chocarme
 	auto front_begin = closest_lidar_index_to_given_angle(filter_data, -0.1);
@@ -520,6 +479,33 @@ std::tuple<State, float, float> SpecificWorker::spiral_method(const RoboCompLida
 
 }
 /**************************************/
+void SpecificWorker::emergency()
+{
+	std::cout << "Emergency worker" << std::endl;
+	//emergencyCODE
+	//
+	//if (SUCCESSFUL) //The componet is safe for continue
+	//  emmit goToRestore()
+}
+
+//Execute one when exiting to emergencyState
+void SpecificWorker::restore()
+{
+	std::cout << "Restore worker" << std::endl;
+	//restoreCODE
+	//Restore emergency component
+
+}
+
+int SpecificWorker::startup_check()
+{
+	std::cout << "Startup check" << std::endl;
+	QTimer::singleShot(200, QCoreApplication::instance(), SLOT(quit()));
+	return 0;
+}
+
+
+
 // From the RoboCompLidar3D you can call this methods:
 // RoboCompLidar3D::TData this->lidar3d_proxy->getLidarData(string name, float start, float len, int decimationDegreeFactor)
 // RoboCompLidar3D::TDataImage this->lidar3d_proxy->getLidarDataArrayProyectedInImage(string name)

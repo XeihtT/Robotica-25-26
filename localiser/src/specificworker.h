@@ -50,6 +50,8 @@
 #include "rapplication/rapplication.h"
 #include "room_detector.h"
 #include "hungarian.h"
+#include <cppitertools/enumerate.hpp>
+#include <cppitertools/zip.hpp>
 
 
 /**
@@ -81,10 +83,10 @@ public:
 		float width;   // mm
 		float length;  // mm
 		Corners corners;
-
+		QRectF rect = QRectF(-5000, -2500, 10000, 5000);
 		explicit NominalRoom(
-			float width_ = 10000.f,
-			float length_ = 5000.f,
+			const float width_ = 10000.f,
+			const float length_ = 5000.f,
 			Corners corners_ = {}
 		) : width(width_), length(length_), corners(std::move(corners_)) {}
 
@@ -165,10 +167,10 @@ private:
 	NominalRoom room{
 		10000.f, 5000.f,
 		{
-	        {QPointF{-5000.f, -2500.f}, 0.f, 0.f},
-			{QPointF{ 5000.f, -2500.f}, 0.f, 0.f},
-			{QPointF{ 5000.f,  2500.f}, 0.f, 0.f},
-			{QPointF{-5000.f,  2500.f}, 0.f, 0.f}
+	        {QPointF{-5000.f, 2500.f}, 0.f, 0.f},
+			{QPointF{ 5000.f, 2500.f}, 0.f, 0.f},
+			{QPointF{ 5000.f,  -2500.f}, 0.f, 0.f},
+			{QPointF{-5000.f,  -2500.f}, 0.f, 0.f}
 		}
 	};
 

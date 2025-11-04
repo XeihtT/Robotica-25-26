@@ -11,8 +11,12 @@ namespace rc
         // create cost matrix for Hungarian //
         std::vector<double> costs;
         for (const auto &[c, _, __]: measurement_corners)    // rows
-            for (const auto &[rc, _, __]: nominal_corners)   // cols
-                costs.emplace_back(euclidean_distance(c, rc));
+            for (const auto &[rc, _, __]: nominal_corners)
+            {
+                if (not std::isnan(euclidean_distance(c, rc)))
+                // cols
+                    costs.emplace_back(euclidean_distance(c, rc));
+            }
         const auto rows = measurement_corners.size();
         const auto cols = nominal_corners.size();
 

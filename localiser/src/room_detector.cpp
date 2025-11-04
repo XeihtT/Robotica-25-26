@@ -5,7 +5,6 @@
 #include "room_detector.h"
 #include <cppitertools/enumerate.hpp>
 #include <cppitertools/combinations.hpp>
-#include <opencv2/imgproc.hpp>
 #include <cppitertools/zip.hpp>
 #include <chrono>
 #include "specificworker.h"
@@ -75,11 +74,12 @@ namespace rc
             const auto& line1 = comb[0];
             const auto& line2 = comb[1];
             double angle = fabs(qDegreesToRadians(line1.toQLineF().angleTo(line2.toQLineF())));
-            if (angle > M_PI / 2) angle = M_PI - angle;
-            if (angle < -M_PI / 2) angle = -M_PI - angle;
+            if (angle > M_PI ) angle = M_PI - angle;
+            if (angle < -M_PI ) angle = -M_PI - angle;
             constexpr double delta = 0.2;
             QPointF intersection;
             const bool angle_condition = (angle < M_PI/2+delta and angle > M_PI/2-delta) or (angle < -M_PI/2+delta and angle > -M_PI/2-delta );
+            //qInfo() << angle_condition << (line1.toQLineF().intersects(line2.toQLineF(), &intersection) == QLineF::UnboundedIntersection);
             long now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             if(angle_condition and line1.toQLineF().intersects(line2.toQLineF(), &intersection) == QLineF::UnboundedIntersection)
                 corners.emplace_back(intersection, 0.0, now );
@@ -118,7 +118,7 @@ namespace rc
         }
         lines_vec.clear();
 
-        const QPen pen(QColor("orange"), 20);
+        const QPen pen(QColor("orange"), 40);
         for(const auto &l : lines)
         {
             auto ql = l.toQLineF();
@@ -163,14 +163,8 @@ namespace rc
     {
         return Eigen::Vector2d{p.x(), p.y()};
     }
-    Eigen::Vector2d Room_Detector::to_eigen(const cv::Point2d  &p)
-    {
-        return Eigen::Vector2d{p.x, p.y};
-    }
-    QPointF Room_Detector::to_qpointf(const cv::Point2d  &p)
-    {
-        return QPointF{p.x, p.y};
-    }
+
+
     double Room_Detector::euc_distance_between_points(const QPointF &p1, const QPointF &p2)
     {
         return sqrt((p1.x()-p2.x())*(p1.x()-p2.x())+(p1.y()-p2.y())*(p1.y()-p2.y()));
