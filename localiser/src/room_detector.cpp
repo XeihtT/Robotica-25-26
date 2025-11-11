@@ -69,32 +69,41 @@ namespace rc
     Corners Room_Detector::get_corners(Lines &lines)
     {
         Corners corners;
-        for(auto &&comb: iter::combinations(lines, 2))
-        {
+
+        for (auto&& comb : iter::combinations(lines, 2)) {
             const auto& line1 = comb[0];
             const auto& line2 = comb[1];
+
             double angle = fabs(qDegreesToRadians(line1.toQLineF().angleTo(line2.toQLineF())));
-            if (angle > M_PI ) angle = M_PI - angle;
-            if (angle < -M_PI ) angle = -M_PI - angle;
+            angle = fmod(angle + M_PI, 2 * M_PI);
+
+            if (angle < 0)
+                angle += 2 * M_PI;
+
+            angle -= M_PI;
+
+            // Opcional: normalización alternativa
+            // if (angle > M_PI / 2) angle = M_PI - angle;
+            // if (angle < -M_PI / 2) angle = -M_PI - angle;
+
             constexpr double delta = 0.2;
             QPointF intersection;
-            const bool angle_condition = (angle < M_PI/2+delta and angle > M_PI/2-delta) or (angle < -M_PI/2+delta and angle > -M_PI/2-delta );
-            //qInfo() << angle_condition << (line1.toQLineF().intersects(line2.toQLineF(), &intersection) == QLineF::UnboundedIntersection);
-            long now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-            if(angle_condition and line1.toQLineF().intersects(line2.toQLineF(), &intersection) == QLineF::UnboundedIntersection)
-                corners.emplace_back(intersection, 0.0, now );
-        }
 
-        // NM suppression
-        constexpr double min_distance_among_corners = 200;
-        Corners filtered_corners;
-        std::ranges::copy_if(corners, std::back_inserter(filtered_corners), [&corners, min_distance_among_corners, this](const Corner &corner1)
-                {
-                   const auto &p1 = std::get<0>(corner1); // Extract QPointF
-                   return std::ranges::none_of(corners, [&corner1, &p1, min_distance_among_corners, this](const Corner &corner2) {
-                        const auto &p2 = std::get<0>(corner2); // Extract QPointF
-                        return &corner1 != &corner2 and euc_distance_between_points(p1, p2) < min_distance_among_corners;});
-                });
+            const bool angle_condition =
+                (angle < M_PI / 2 + delta && angle > M_PI / 2 - delta) ||
+                (angle < -M_PI / 2 + delta && angle > -M_PI / 2 - delta);
+
+            long now = std::chrono::duration_cast<std::chrono::seconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+
+            if (angle_condition &&
+                line1.toQLineF().intersects(line2.toQLineF(), &intersection) ==
+                    QLineF::UnboundedIntersection)
+            {
+                corners.emplace_back(intersection, 0.0, now);
+            }
+        }
         return corners;
     }
 

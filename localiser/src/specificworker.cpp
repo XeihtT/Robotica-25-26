@@ -105,55 +105,108 @@ void SpecificWorker::initialize()
 
 void SpecificWorker::compute()
 {
-	// read lidar
-	const RoboCompLidar3D::TPoints filter_data = filtro_datos();
-	draw_lidar(filter_data, &viewer1->scene);
+	RoboCompLidar3D::TPoints data = filtro_datos();
+	draw_lidar(data, &viewer1->scene);
 
-	// corners
-	const auto corners = room_detector.compute_corners(filter_data, &viewer1->scene);
+	// compute corners
+	const auto corners = room_detector.compute_corners(data, &viewer1->scene);
 
-	//match
+	auto filtered_corners = filter_close_corners(corners, 600);
+
 	auto cr = room.transform_corners_to(robot_pose.inverse());
 	for (const auto &[cn, cm] : iter::zip(cr, corners))
 		if (std::isnan(std::get<QPointF>(cn).x()) or std::isnan(std::get<QPointF>(cn).y()) or
 			std::isnan(std::get<QPointF>(cm).x()) or std::isnan(std::get<QPointF>(cm).y()))
 			return;
 
-	const auto match = hungarian.match(corners,cr, 1000);
+	// qDebug()<<"Medidas: ";
+	// for (auto &[c, _, __] : corners)
+	// 	qDebug() << c.x()<<"///"<<c.y();
 
-	// make matrix
-	Eigen::MatrixXd W(match.size()*2, 3);
-	Eigen::VectorXd b(match.size()*2);
-	for (const auto &[i, m] : match | iter::enumerate)
-	{
-		auto &[cm, cn, d] = m;
-		auto &[cmc, _, __] = cm;
-		auto &[cnc, ___, ____] = cn;
-		W(i,0) = 1.0;
-		W(i,1) = 0.0;
-		if (i%2 == 0)
-		{
-			W(i,2) = -cmc.y();
-			b(i) = cnc.x() - cmc.x();
-		}
-		else
-		{
-			W(i,2) = cmc.x();
-			b(i) = cnc.y() - cmc.y();
-		}
+	qDebug()<<"Medidas (filtradas): ";
+	for (auto & c: filtered_corners) {
+		qDebug()<<c.x()<<"///"<<c.y()<<" ";
 	}
-	// operate
-	const auto r = (W.transpose()*W).inverse()*W.transpose() * b;
+
+	qDebug()<<"Nominales: ";
+	for (auto &[c, _, __] : room.corners)
+		qDebug() << c;
+	qDebug() << "______________________________";
+
+
+
+	// match corners  transforming first nominal corners to robot's frame
+	const auto match = hungarian.match(corners, cr, 1000.0 );
+	// for (const auto &[c1, c2, err] : match)
+	//     qInfo() << "Match error: " << std::get<0>(c1) << " - " << std::get<0>(c2) << " = " << err;
+
+	//qDebug()<<"Hay: "<<match.size()<<" matches";
+	//if (match.size()<3) {qWarning() << "No 3 matches"; return;}
+
+
+	qDebug()<<"Tamaño del match: "<<match.size();
+	// create matrices W and b for pose estimation
+	Eigen::MatrixXd W(corners.size() * 2, 3);
+	Eigen::VectorXd b(corners.size() * 2);
+	for (auto &&[i, m]: match | iter::enumerate)
+	{
+		auto &[meas_c, nom_c, _] = m;
+		auto &[p_meas, __, ___] = meas_c;
+		auto &[p_nom, ____, _____] = nom_c;
+		b(2 * i)     = p_nom.x() - p_meas.x();
+		b(2 * i + 1) = p_nom.y() - p_meas.y();
+		W.block<1, 3>(2 * i, 0)     << 1.0, 0.0, -p_meas.y();
+		W.block<1, 3>(2 * i + 1, 0) << 0.0, 1.0, p_meas.x();
+	}
+
+	// estimate new pose with pseudoinverse
+	const Eigen::Vector3d r = (W.transpose() * W).inverse() * W.transpose() * b;
+	std::cout << r << std::endl;
+	qInfo() << "--------------------";
+
+	if (r.array().isNaN().any())
+		return;
+
+	// check for large translations/rotations
+	if (std::fabs(r(0)) > 20000 or std::fabs(r(1)) > 20000 or std::fabs(r(2)) > 20000)
+	{
+		qWarning() << "Large translation in x: " << r(0);
+		return;
+	}
 
 	// update robot pose
+	qInfo() << "Robot pose: " << robot_pose.translation().x() << ", " << robot_pose.translation().y();
 	robot_pose.translate(Eigen::Vector2d(r(0), r(1)));
-	robot_pose.rotate(r(2));
+	robot_pose.rotate(r[2]);
+	double angle = std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0));
+	qInfo() << "Robot pose: " << robot_pose.translation().x() << ", " << robot_pose.translation().y() << ", " << qRadiansToDegrees(angle);
 
-	// update robot draw
-	robot_polygon->setPos(r(0), r(1));
-	robot_polygon->setRotation(r(2));
+	// draw robot in viewer
+	robot_polygon->setPos(robot_pose.translation().x(), robot_pose.translation().y());
+	angle = qRadiansToDegrees(std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0)));
+	robot_polygon->setRotation(angle);
+
 }
-
+std::vector<QPointF> SpecificWorker::filter_close_corners(const Corners& corners, float min_dist)
+{
+	std::vector<QPointF> filtered;
+	for (auto &[c, _, __] : corners)
+	{
+		bool too_close = false;
+		for (const auto &f : filtered)
+		{
+			float dist = std::hypot(c.x() - f.x(), c.y() - f.y());
+			if (dist < min_dist)
+			{
+				too_close = true;
+				break;
+			}
+		}
+		if (!too_close)
+			filtered.push_back(c);
+	}
+	return filtered;
+}
 std::expected<int, std::string> SpecificWorker::closest_lidar_index_to_given_angle(const auto &points, float angle)
 {
 	// search for the point in points whose phi value is closest to angle
@@ -258,7 +311,7 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos()
 	RoboCompLidar3D::TPoints  p_filter;
 	try
 	{
-		auto data = lidar3d_proxy->getLidarData("helios", 0, 2*M_PI, 1); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+		auto data = lidar3d_proxy->getLidarData("pearl", 0, 2*M_PI, 3); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		//qInfo() << "Size: "<<data.points.size();
 		if (data.points.empty()){qDebug()<<"No points"; return p_filter;}
 
@@ -268,11 +321,11 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos()
 		*/
 
 		//Esto siguiente es opcional
-		//p_filter = filter_isolated_points(data.points, 100);
-		// if (p_filter.empty())
-		// 	return {};
+		p_filter = filter_isolated_points(data.points, 200);
+		if (p_filter.empty())
+			return {};
 
-		return data.points;
+		return p_filter;
 	}
 	catch (const Ice::Exception &e){ std::cout<<e.what()<<std::endl; return p_filter;}
 }
