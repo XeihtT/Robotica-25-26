@@ -4,6 +4,10 @@ LIST(APPEND SOURCES
         ../src/room_detector.cpp
         ../src/ransac_line_detector.cpp
         ../src/hungarian.cpp
+        ../src/time_series_plotter.cpp
+        ../src/door_detector.cpp
+        ../src/qcustomplot.cpp
+
 )
 
 # Headers set
@@ -12,9 +16,14 @@ LIST(APPEND HEADERS
         ../src/room_detector.h
         ../src/ransac_line_detector.h
         ../src/hungarian.h
+        ../src/time_series_plotter.h
+        ../src/common_types.h
+        ../src/image_processor.h
+        ../src/door_detector.h
+        ../src/qcustomplot.h
 )
 
-SET (LIBS ${LIBS}  tbb)
+SET(LIBS ${LIBS} tbb Qt6PrintSupport)
 LIST(APPEND LIBS ${LIBS})
 
 # no-char8_t to avoid a problem with ICE Connection lib.
