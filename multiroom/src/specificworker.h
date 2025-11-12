@@ -58,7 +58,11 @@
  * \brief Class SpecificWorker implements the core functionality of the component.
  */
 
-enum class State { FORWARD, TURN_FORWARD, TURN_FOLLOW, SPIRAL, FOLLOW_WALL};
+enum class State {
+	FORWARD, TURN_FORWARD, TURN_FOLLOW, SPIRAL, FOLLOW_WALL,
+	LOCALISE, GOTO_ROOM_CENTER, TURN, UPDATE_POSE
+};
+
 
 class SpecificWorker : public GenericWorker
 {
@@ -77,6 +81,8 @@ public:
      */
 	~SpecificWorker();
 
+	void JoystickAdapter_sendData(RoboCompJoystickAdapter::TData data);
+
 
 
 	struct NominalRoom {
@@ -84,7 +90,7 @@ public:
 		float length;  // mm
 		Corners corners;
 		QRectF rect = QRectF(-5000, -2500, 10000, 5000);
-		explicit NominalRoom(
+		NominalRoom(
 			const float width_ = 10000.f,
 			const float length_ = 5000.f,
 			Corners corners_ = {}
@@ -164,14 +170,17 @@ private:
 
 	//room
 	rc::Room_Detector room_detector;
-	NominalRoom room{
-		10000.f, 5000.f,
+	NominalRoom rooms[2] = {
 		{
-	        {QPointF{-5000.f, 2500.f}, 0.f, 0.f},
-			{QPointF{ 5000.f, 2500.f}, 0.f, 0.f},
-			{QPointF{ 5000.f,  -2500.f}, 0.f, 0.f},
-			{QPointF{-5000.f,  -2500.f}, 0.f, 0.f}
-		}
+			10000.f, 5000.f,
+			{
+	            {QPointF{-5000.f,  2500.f}, 0.f, 0.f},
+				{QPointF{ 5000.f,  2500.f}, 0.f, 0.f},
+				{QPointF{ 5000.f, -2500.f}, 0.f, 0.f},
+				{QPointF{-5000.f, -2500.f}, 0.f, 0.f}
+			}
+		},
+		{} // segundo NominalRoom vacío (constructor por defecto)
 	};
 
 

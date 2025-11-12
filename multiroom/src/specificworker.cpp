@@ -72,31 +72,37 @@ SpecificWorker::~SpecificWorker()
 	std::cout << "Destroying SpecificWorker" << std::endl;
 }
 
-void SpecificWorker::initialize()
-{
-    std::cout << "initialize worker" << std::endl;
+void SpecificWorker::initialize() {
+	std::cout << "initialize worker" << std::endl;
 
-	robot_pose.setIdentity();
-	robot_pose.translate(Eigen::Vector2d(0,0));
-    //initializeCODE
+	if (this->startup_check_flag) {
+		this->startup_check();
+	}
+	else {
+		viewer = new AbstractGraphicViewer(this->frame, GRID_MAX_DIM); //grid?
+		auto [r, e] = viewer->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 100, QColor("Blue"));
+
+		robot_pose.setIdentity();
+		robot_pose.translate(Eigen::Vector2d(0,0));
+	//initializeCODE
 
 
-	this->dimensions = QRectF(-6000, -3000, 12000, 6000);
-	viewer1 = new AbstractGraphicViewer(this->frame, this->dimensions);
-	this->resize(900,450);
+		this->dimensions = QRectF(-6000, -3000, 12000, 6000);
+		viewer1 = new AbstractGraphicViewer(this->frame, this->dimensions);
+		this->resize(900,450);
 	//viewer1->show();
-	const auto rob1 = viewer1->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
-	robot_polygon = std::get<0>(rob1);
-	connect(viewer1, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
+		const auto rob1 = viewer1->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
+		robot_polygon = std::get<0>(rob1);
+		connect(viewer1, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
 
-	viewer2 = new AbstractGraphicViewer(this->frame_room, room.rect);
-	this->resize(900,450);
-	const auto rob2 = viewer2->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
-	robot_polygon = std::get<0>(rob2);
-	connect(viewer2, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
-	viewer2->scene.addRect(room.rect, QPen(QColor("magenta"), 30));
+		viewer2 = new AbstractGraphicViewer(this->frame_room, rooms[0].rect);
+		this->resize(900,450);
+		const auto rob2 = viewer2->add_robot(ROBOT_LENGTH, ROBOT_LENGTH, 0, 190, QColor("Blue"));
+		robot_polygon = std::get<0>(rob2);
+		connect(viewer2, &AbstractGraphicViewer::new_mouse_coordinates, this, &SpecificWorker::new_target_slot);
+		viewer2->scene.addRect(rooms[0].rect, QPen(QColor("magenta"), 30));
 	//viewer2->show();
-
+	}
     /////////GET PARAMS, OPEND DEVICES....////////
     //int period = configLoader.get<int>("Period.Compute") //NOTE: If you want get period of compute use getPeriod("compute")
     //std::string device = configLoader.get<std::string>("Device.name") 
@@ -113,7 +119,7 @@ void SpecificWorker::compute()
 
 	auto filtered_corners = filter_close_corners(corners, 600);
 
-	auto cr = room.transform_corners_to(robot_pose.inverse());
+	auto cr = rooms[0].transform_corners_to(robot_pose.inverse());
 	for (const auto &[cn, cm] : iter::zip(cr, corners))
 		if (std::isnan(std::get<QPointF>(cn).x()) or std::isnan(std::get<QPointF>(cn).y()) or
 			std::isnan(std::get<QPointF>(cm).x()) or std::isnan(std::get<QPointF>(cm).y()))
@@ -129,7 +135,7 @@ void SpecificWorker::compute()
 	}
 
 	qDebug()<<"Nominales: ";
-	for (auto &[c, _, __] : room.corners)
+	for (auto &[c, _, __] : rooms[0].corners)
 		qDebug() << c;
 	qDebug() << "______________________________";
 
@@ -557,7 +563,12 @@ int SpecificWorker::startup_check()
 	return 0;
 }
 
+//SUBSCRIPTION to sendData method from JoystickAdapter interface
+void SpecificWorker::JoystickAdapter_sendData(RoboCompJoystickAdapter::TData data)
+{
+	//subscribesToCODE
 
+}
 
 // From the RoboCompLidar3D you can call this methods:
 // RoboCompLidar3D::TData this->lidar3d_proxy->getLidarData(string name, float start, float len, int decimationDegreeFactor)
@@ -588,3 +599,8 @@ int SpecificWorker::startup_check()
 // From the RoboCompOmniRobot you can use this types:
 // RoboCompOmniRobot::TMechParams
 
+/**************************************/
+// From the RoboCompJoystickAdapter you can use this types:
+// RoboCompJoystickAdapter::AxisParams
+// RoboCompJoystickAdapter::ButtonParams
+// RoboCompJoystickAdapter::TData
