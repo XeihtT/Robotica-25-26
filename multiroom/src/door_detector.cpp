@@ -10,6 +10,26 @@
 
 Doors DoorDetector::detect(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene)
 {
+    Peaks picos;
+    for(const auto &p : points | iter::sliding_window(2))
+    {
+        const auto &p1 = p[0];
+        const auto &p2 = p[1];
+        
+        if(std::abs(p1.distance2d - p2.distance2d) >= 1000)
+        {
+            RoboCompLidar3D::TPoint p = std::min(p1, p2, [](const auto a, const auto b)
+            {
+                return a.distance2d < b.distance2d;
+            });
+
+            Eigen::Vector2f vector = p.;
+
+
+            picos.emplace_back(p1);
+        }
+    }
+
    return {};
 }
 
