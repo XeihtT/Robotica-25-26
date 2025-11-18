@@ -2,8 +2,12 @@
 Proxies.Lidar3D = "lidar3d:tcp -h localhost -p 11990"
 Proxies.OmniRobot = "omnirobot:tcp -h localhost -p 10004"
 
+Proxies.Camera360RGB = "camera360rgb:tcp -h localhost -p 10098"
 
+# Endpoints for subscriptions interfaces
 
+# This property is used by the clients to connect to IceStorm.
+Proxies.TopicManager = "IceStorm/TopicManager:default -p 9999"
 Period.Compute = 100
 Period.Emergency = 500
 
