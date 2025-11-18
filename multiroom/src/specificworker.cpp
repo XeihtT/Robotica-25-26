@@ -21,6 +21,7 @@
 float MIN_TO_WALL_FORWARD = 1100.0f; //Distancia minima que el robot tendra a una pared antes de que este empiece a girar
 float MIN_TO_WALL_FOLLOW = 900;
 int turn_way = 1;
+bool localised = false;
 //Ahora mismo esta OK pero se sigue chocando un pelin (muy poco, mas bien roce) //TODO: Mirarlo mañana con obstaculos
 //float dist_threshold=1900;
 //Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
@@ -131,20 +132,23 @@ void SpecificWorker::compute()
    const auto center_opt = room_detector.estimate_center_from_walls(lines);
    draw_lidar(data, center_opt, &viewer->scene);
 
-   // match corners  transforming first nominal corners to robot's frame
-   // const auto match = hungarian.match(corners, rooms[0].transform_corners_to(robot_pose.inverse()));
-   //
-   //
-   // // compute max of  match error
-   // float max_match_error = 99999.f;
-   // if (not match.empty())
-   // {
-   //     const auto max_error_iter = std::ranges::max_element(match, [](const auto &a, const auto &b)
-   //         { return std::get<2>(a) < std::get<2>(b); });
-   //     max_match_error = static_cast<float>(std::get<2>(*max_error_iter));
-   //     time_series_plotter->addDataPoint(match_error_graph,max_match_error);
-   //     //print_match(match, max_match_error); //debugging
-   // }
+   //match corners  transforming first nominal corners to robot's frame
+   const auto match = hungarian.match(corners, rooms[0].transform_corners_to(robot_pose.inverse()));
+	
+   // compute max of  match error
+   float max_match_error = 99999.f;
+   if (not match.empty())
+   {
+       const auto max_error_iter = std::ranges::max_element(match, [](const auto &a, const auto &b)
+           { return std::get<2>(a) < std::get<2>(b); });
+       max_match_error = static_cast<float>(std::get<2>(*max_error_iter));
+       time_series_plotter->addDataPoint(match_error_graph,max_match_error);
+       time_series_plotter->update(); //<- se hace más adelante, no se tiene porqué hacer aquí
+   		qDebug()<<max_match_error; //funciona? 3000 de error aprox siempre TODO PREGUNTAR -> pq me tienen que dar las coords nominales de la nueva sala
+       //print_match(match, max_match_error); //debugging
+   }
+
+
    //
    //
    // // update robot pose

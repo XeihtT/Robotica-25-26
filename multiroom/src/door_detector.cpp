@@ -47,7 +47,7 @@ Doors DoorDetector::detect(const RoboCompLidar3D::TPoints &points, QGraphicsScen
         if(gap < 1300.f and gap > 800.f)
             doors.emplace_back(p0, a0, p1, a1);
     }
-    qInfo() << __FUNCTION__ << "Peaks found: " << peaks.size() << "Doors found: " << doors.size();
+    //qInfo() << __FUNCTION__ << "Peaks found: " << peaks.size() << "Doors found: " << doors.size();
 
     // draw peaks in viewer
     static std::vector<QGraphicsItem *> doors_draw;
@@ -112,7 +112,7 @@ RoboCompLidar3D::TPoints DoorDetector::filter_points(const RoboCompLidar3D::TPoi
             filtered.emplace_back(p);
         }
     }
-    qDebug()<<"han sido eliminados: "<<points.size()-filtered.size()<<" puntos"; //de vez en cuando se le cuelan 1 o 2 puntos no se si de ruido o de que
+    //qDebug()<<"han sido eliminados: "<<points.size()-filtered.size()<<" puntos"; //de vez en cuando se le cuelan 1 o 2 puntos no se si de ruido o de que
     return filtered;
 }
 
