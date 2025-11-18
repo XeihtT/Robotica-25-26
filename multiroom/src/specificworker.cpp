@@ -21,7 +21,7 @@
 float MIN_TO_WALL_FORWARD = 1100.0f; //Distancia minima que el robot tendra a una pared antes de que este empiece a girar
 float MIN_TO_WALL_FOLLOW = 900;
 int turn_way = 1;
-bool localised = false;
+
 //Ahora mismo esta OK pero se sigue chocando un pelin (muy poco, mas bien roce) //TODO: Mirarlo mañana con obstaculos
 //float dist_threshold=1900;
 //Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
@@ -122,6 +122,7 @@ void SpecificWorker::initialize()
 }
 
 
+
 void SpecificWorker::compute()
 {
    RoboCompLidar3D::TPoints data = filtro_datos();
@@ -142,8 +143,8 @@ void SpecificWorker::compute()
        const auto max_error_iter = std::ranges::max_element(match, [](const auto &a, const auto &b)
            { return std::get<2>(a) < std::get<2>(b); });
        max_match_error = static_cast<float>(std::get<2>(*max_error_iter));
-       time_series_plotter->addDataPoint(match_error_graph,max_match_error);
-       time_series_plotter->update(); //<- se hace más adelante, no se tiene porqué hacer aquí
+       time_series_plotter->addDataPoint(0,max_match_error);
+       //time_series_plotter->update(); //<- se hace más adelante, no se tiene porqué hacer aquí
    		qDebug()<<max_match_error; //funciona? 3000 de error aprox siempre TODO PREGUNTAR -> pq me tienen que dar las coords nominales de la nueva sala
        //print_match(match, max_match_error); //debugging
    }
@@ -152,8 +153,8 @@ void SpecificWorker::compute()
    //
    //
    // // update robot pose
-   // if (localised)
-   //     update_robot_pose(corners, match);
+    if (localised)
+        update_robot_pose(corners, match);
    //
    //
    // // Process state machine
@@ -182,7 +183,41 @@ void SpecificWorker::compute()
    // lcdNumber_angle->display(angle);
    // last_time = std::chrono::high_resolution_clock::now();;
 }
+bool SpecificWorker::update_robot_pose(const Corners &corners, const Match &match) {
 
+}
+std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, std::optional<Eigen::Vector2d> center, AbstractGraphicViewer *viewer){
+
+	Eigen::Vector2f centro = center.value().cast<float>();
+	std::tuple<STATE, float, float> result;
+	switch (this->state) {
+		case STATE::IDLE:
+			break; //no hacer nada
+		case STATE::LOCALISE:
+			result = localise(match);
+			break;
+		case STATE::GOTO_DOOR:
+			result = goto_door(data);
+			break;
+		case STATE::TURN:
+			result = turn(corners);
+			break;
+		case STATE::ORIENT_TO_DOOR:
+			result = orient_to_door(data);
+			break;
+		case STATE::GOTO_ROOM_CENTER:
+			result = goto_room_center(data, centro);
+			break;
+		case STATE::CROSS_DOOR:
+			result = cross_door(data);
+			break;
+		default:
+			break;
+	}
+
+	this->state=std::get<STATE>(result);
+	return result;
+}
 std::vector<QPointF> SpecificWorker::filter_close_corners(const Corners& corners, float min_dist)
 {
 	std::vector<QPointF> filtered;
@@ -237,6 +272,7 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
     }
 
 	//Adicional de la actividad 3 multiroom para dibujar el centro de la sala
+
 	if(center.has_value())
 	{
 		const double x = center->x();
@@ -331,7 +367,7 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos()
 	RoboCompLidar3D::TPoints  p_filter;
 	try
 	{
-		auto data = lidar3d_proxy->getLidarData("pearl", 0, 2*M_PI, 3); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+		auto data = lidar3d_proxy->getLidarData("pearl", 0, 2*M_PI, 2); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		//qInfo() << "Size: "<<data.points.size();
 		if (data.points.empty()){qDebug()<<"No points"; return p_filter;}
 
@@ -411,6 +447,63 @@ void SpecificWorker::update_robot_position() {
 	}
 	catch (const Ice::Exception& e){std::cout<<e.what();}
 }
+
+std::tuple<STATE, float, float> SpecificWorker::goto_room_center(const RoboCompLidar3D::TPoints &points, const Eigen::Vector2f& centro) {
+	std::tuple<float,float> res = robot_controller(centro); //hay que moverse una vez en principio no mas
+
+	std::tuple<STATE, float, float> toReturn {
+		STATE::GOTO_ROOM_CENTER,
+		std::get<0>(res),
+		std::get<1>(res)
+	};
+
+	return toReturn; //TODO: igual hay que hacer mas cosas antes de esto
+}
+
+
+std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f &point){
+
+//TODO
+	static float old_theta = 0; //la primera vez tendra valor 0
+	float new_theta, inc_theta, rot;
+	float sigma = M_PI / 4;
+	float kp = 2.0f;
+	float kd = 0.5f;
+
+
+	const double x = point.x();
+	const double y = point.y();
+
+	new_theta = std::atan2(y, x);
+	inc_theta = (new_theta - old_theta) / 0.1;
+	rot = (kp * new_theta) + (kd * inc_theta);
+	old_theta = new_theta;
+
+	float f_theta = std::exp( - (new_theta* new_theta) / (2.0 * sigma * sigma) );
+
+	float v =params.MAX_ADV_SPEED*f_theta;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**************************************/
 void SpecificWorker::emergency()

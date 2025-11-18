@@ -18,7 +18,7 @@
 DOXYFILE_ENCODING      = UTF-8
 
 # ROBOCOMP
-PROJECT_NAME           = localiser
+PROJECT_NAME           = multiroom
 PROJECT_NUMBER         =
 
 

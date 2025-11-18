@@ -96,12 +96,12 @@ RoboCompLidar3D::TPoints DoorDetector::filter_points(const RoboCompLidar3D::TPoi
             if (angle_wraps)
             {
                 // If the range wraps around, point is in range if it's > p1_angle OR < p2_angle
-                point_in_angular_range = (p.phi > d.p1_angle) or (p.phi < d.p2_angle);
+                point_in_angular_range = (p.phi+0.18 > d.p1_angle) or (p.phi-0.18 < d.p2_angle);
             }
             else
             {
                 // Normal case: point is in range if it's between p1_angle and p2_angle
-                point_in_angular_range = (p.phi > d.p1_angle) and (p.phi < d.p2_angle);
+                point_in_angular_range = (p.phi+0.18 > d.p1_angle) and (p.phi-0.18 < d.p2_angle);
             }
 
             // Filter out points that are through the door (in angular range and farther than door)

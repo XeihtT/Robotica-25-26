@@ -63,7 +63,7 @@
  */
 
 
-
+enum class STATE {GOTO_DOOR, ORIENT_TO_DOOR, LOCALISE, GOTO_ROOM_CENTER, TURN, IDLE, CROSS_DOOR};
 
 class SpecificWorker : public GenericWorker
 {
@@ -251,7 +251,7 @@ private:
 
 	//states
 	// state machine
-	enum class STATE {GOTO_DOOR, ORIENT_TO_DOOR, LOCALISE, GOTO_ROOM_CENTER, TURN, IDLE, CROSS_DOOR};
+
 	inline const char* to_string(const STATE s) const
 	{
 		switch(s) {
@@ -265,16 +265,16 @@ private:
 		default:                        return "UNKNOWN";
 		}
 	}
-	STATE state = STATE::LOCALISE;
+	STATE state = STATE::GOTO_ROOM_CENTER;
 	using RetVal = std::tuple<STATE, float, float>;
 	RetVal goto_door(const RoboCompLidar3D::TPoints &points);
 	RetVal orient_to_door(const RoboCompLidar3D::TPoints &points);
 	RetVal cross_door(const RoboCompLidar3D::TPoints &points);
 	RetVal localise(const Match &match);
-	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points);
+	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points, const Eigen::Vector2f& centro);
 	RetVal update_pose(const Corners &corners, const Match &match);
 	RetVal turn(const Corners &corners);
-	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, AbstractGraphicViewer *viewer);
+	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, std::optional<Eigen::Vector2d> center, AbstractGraphicViewer *viewer);
 
 	// viewer
 	AbstractGraphicViewer *viewer, *viewer_room;
@@ -298,15 +298,6 @@ private:
 	std::optional<RoboCompLidar3D::TPoints> filter_min_distance_cppitertools(const RoboCompLidar3D::TPoints& points);
 	RoboCompLidar3D::TPoints filter_isolated_points(const RoboCompLidar3D::TPoints &points, float d);
 	void update_robot_position();
-
-	std::tuple<float, float> update_robot_state(const RoboCompLidar3D::TPoints& points);
-
-	std::tuple<State, float, float> forward_method(const RoboCompLidar3D::TPoints& points);
-	std::tuple<State, float, float> follow_wall_method(const RoboCompLidar3D::TPoints& points);
-	std::tuple<State, float, float> spiral_method(const RoboCompLidar3D::TPoints& points);
-
-	std::tuple<State, float, float> turn_forward_method(const RoboCompLidar3D::TPoints& filter_data);
-	std::tuple<State, float, float> turn_follow_method(const RoboCompLidar3D::TPoints& points);
 	RoboCompLidar3D::TPoints filtro_datos();
 
 	std::expected<int, std::string> closest_lidar_index_to_given_angle(const auto &points, float angle);

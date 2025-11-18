@@ -18,11 +18,11 @@
  */
 
 
-/** \mainpage RoboComp::localiser
+/** \mainpage RoboComp::multiroom
  *
  * \section intro_sec Introduction
  *
- * The localiser component...
+ * The multiroom component...
  *
  * \section interface_sec Interface
  *
@@ -34,7 +34,7 @@
  * ...
  *
  * \subsection install2_ssec Compile and install
- * cd localiser
+ * cd multiroom
  * <br>
  * cmake . && make
  * <br>
@@ -52,7 +52,7 @@
  *
  * \subsection execution_ssec Execution
  *
- * Just: "${PATH_TO_BINARY}/localiser --Ice.Config=${PATH_TO_CONFIG_FILE}"
+ * Just: "${PATH_TO_BINARY}/multiroom --Ice.Config=${PATH_TO_CONFIG_FILE}"
  *
  * \subsection running_ssec Once running
  *
@@ -78,14 +78,15 @@
 #include "../src/specificworker.h"
 
 
+#include <Camera360RGB.h>
 #include <GenericBase.h>
 #include <Lidar3D.h>
 #include <OmniRobot.h>
 
 #define USE_QTGUI
 
-#define PROGRAM_NAME    "localiser"
-#define SERVER_FULL_NAME   "RoboComp localiser::localiser"
+#define PROGRAM_NAME    "multiroom"
+#define SERVER_FULL_NAME   "RoboComp multiroom::multiroom"
 
 
 template <typename ProxyType, typename ProxyPointer>
@@ -107,10 +108,10 @@ void require(const Ice::CommunicatorPtr& communicator,
 }
 
 
-class localiser : public Ice::Application
+class multiroom : public Ice::Application
 {
 public:
-	localiser (QString configFile, QString prfx, bool startup_check) { 
+	multiroom (QString configFile, QString prfx, bool startup_check) { 
 		this->configFile = configFile.toStdString();
 		this->prefix = prfx.toStdString();
 		this->startup_check_flag=startup_check; 
@@ -131,7 +132,7 @@ public:
 	virtual int run(int, char*[]);
 };
 
-Ice::InitializationData localiser::getInitializationDataIce(){
+Ice::InitializationData multiroom::getInitializationDataIce(){
         Ice::InitializationData initData;
         initData.properties = Ice::createProperties();
         initData.properties->setProperty("Ice.Warn.Connections", this->configLoader.get<std::string>("Ice.Warn.Connections"));
@@ -141,14 +142,14 @@ Ice::InitializationData localiser::getInitializationDataIce(){
 		return initData;
 }
 
-void localiser::initialize()
+void multiroom::initialize()
 {
     this->configLoader.load(this->configFile);
 	this->configLoader.printConfig();
 	std::cout<<std::endl;
 }
 
-int localiser::run(int argc, char* argv[])
+int multiroom::run(int argc, char* argv[])
 {
 #ifdef USE_QTGUI
 	QApplication a(argc, argv);  // GUI application
@@ -171,17 +172,20 @@ int localiser::run(int argc, char* argv[])
 
 	int status=EXIT_SUCCESS;
 
+	RoboCompCamera360RGB::Camera360RGBPrxPtr camera360rgb_proxy;
 	RoboCompLidar3D::Lidar3DPrxPtr lidar3d_proxy;
 	RoboCompOmniRobot::OmniRobotPrxPtr omnirobot_proxy;
 
 
 	//Require code
+	require<RoboCompCamera360RGB::Camera360RGBPrx, RoboCompCamera360RGB::Camera360RGBPrxPtr>(communicator(),
+	                    configLoader.get<std::string>("Proxies.Camera360RGB"), "Camera360RGBProxy", camera360rgb_proxy);
 	require<RoboCompLidar3D::Lidar3DPrx, RoboCompLidar3D::Lidar3DPrxPtr>(communicator(),
 	                    configLoader.get<std::string>("Proxies.Lidar3D"), "Lidar3DProxy", lidar3d_proxy);
 	require<RoboCompOmniRobot::OmniRobotPrx, RoboCompOmniRobot::OmniRobotPrxPtr>(communicator(),
 	                    configLoader.get<std::string>("Proxies.OmniRobot"), "OmniRobotProxy", omnirobot_proxy);
 
-	tprx = std::make_tuple(lidar3d_proxy,omnirobot_proxy);
+	tprx = std::make_tuple(camera360rgb_proxy,lidar3d_proxy,omnirobot_proxy);
 	SpecificWorker *worker = new SpecificWorker(this->configLoader, tprx, startup_check_flag);
 	QObject::connect(worker, SIGNAL(kill()), &a, SLOT(quit()));
 
@@ -263,7 +267,7 @@ int main(int argc, char* argv[])
 		}
 
 	}
-	localiser app(configFile, prefix, startup_check_flag);
+	multiroom app(configFile, prefix, startup_check_flag);
 
 	return app.main(argc, argv, app.getInitializationDataIce());
 }
