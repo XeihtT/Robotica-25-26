@@ -148,8 +148,8 @@ void SpecificWorker::compute()
    		qDebug()<<max_match_error; //funciona? 3000 de error aprox siempre TODO PREGUNTAR -> pq me tienen que dar las coords nominales de la nueva sala
        //print_match(match, max_match_error); //debugging
    }
-
-
+	auto tuple_movement = process_state(data, corners, match, center_opt, viewer);
+	this->omnirobot_proxy->setSpeedBase(0, std::get<1>(tuple_movement), std::get<2>(tuple_movement));
    //
    //
    // // update robot pose
@@ -367,7 +367,7 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos()
 	RoboCompLidar3D::TPoints  p_filter;
 	try
 	{
-		auto data = lidar3d_proxy->getLidarData("pearl", 0, 2*M_PI, 2); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 2); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		//qInfo() << "Size: "<<data.points.size();
 		if (data.points.empty()){qDebug()<<"No points"; return p_filter;}
 
@@ -467,25 +467,31 @@ std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f 
 	static float old_theta = 0; //la primera vez tendra valor 0
 	float new_theta, inc_theta, rot;
 	float sigma = M_PI / 4;
-	float kp = 2.0f;
-	float kd = 0.5f;
-
+	float kp = 0.5f;
+	float kd = 2;
+	float k = 10;
+	float d_stop = 0.65f;
 
 	const double x = point.x();
 	const double y = point.y();
 
-	new_theta = std::atan2(y, x);
-	inc_theta = (new_theta - old_theta) / 0.1;
-	rot = (kp * new_theta) + (kd * inc_theta);
-	old_theta = new_theta;
+	new_theta = std::atan2(x, y);
+	//inc_theta = (new_theta - old_theta) / 0.1;
+	//old_theta = new_theta;
 
-	float f_theta = std::exp( - (new_theta* new_theta) / (2.0 * sigma * sigma) );
+	//float f_theta = std::exp( - (new_theta* new_theta) / (2.0 * sigma * sigma) );
+	rot = (kp * new_theta); //+ (kd * inc_theta);
+	//float f_distance_brake = 1 / (1 + std::exp(k*(point.norm() - d_stop)));
+	//float v =params.MAX_ADV_SPEED*f_theta*f_distance_brake;
 
-	float v =params.MAX_ADV_SPEED*f_theta;
-
-
+	return {0, rot};
 }
 
+std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D::TPoints &points){}
+std::tuple<STATE, float, float> SpecificWorker::orient_to_door(const RoboCompLidar3D::TPoints &points){}
+std::tuple<STATE, float, float> SpecificWorker::cross_door(const RoboCompLidar3D::TPoints &points){}
+std::tuple<STATE, float, float> SpecificWorker::localise(const Match &match){}
+std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners){}
 
 
 
