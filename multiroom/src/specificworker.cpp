@@ -94,7 +94,7 @@ void SpecificWorker::initialize()
 		auto [rr, re] = viewer_room->add_robot(params.ROBOT_WIDTH, params.ROBOT_LENGTH, 0, 100, QColor("Blue"));
 		robot_room_draw = rr;
 		// draw room in viewer_room
-		viewer_room->scene.addRect(rooms[0].rect, QPen(Qt::black, 30));
+		viewer_room->scene.addRect(rooms[0].rect(), QPen(Qt::black, 30));
 		//viewer_room->show();
 		show();
 
@@ -133,9 +133,12 @@ void SpecificWorker::compute()
    const auto center_opt = room_detector.estimate_center_from_walls(lines);
    draw_lidar(data, center_opt, &viewer->scene);
 
+	//qDebug()<<"Se han medido "<<corners.size()<<" esquinas";
+
+
    //match corners  transforming first nominal corners to robot's frame
    const auto match = hungarian.match(corners, rooms[0].transform_corners_to(robot_pose.inverse()));
-	
+	//qDebug()<<"El match es de "<<match.size()<<" esquinas";
    // compute max of  match error
    float max_match_error = 99999.f;
    if (not match.empty())
@@ -145,7 +148,7 @@ void SpecificWorker::compute()
        max_match_error = static_cast<float>(std::get<2>(*max_error_iter));
        time_series_plotter->addDataPoint(0,max_match_error);
        //time_series_plotter->update(); //<- se hace más adelante, no se tiene porqué hacer aquí
-   		qDebug()<<max_match_error; //funciona? 3000 de error aprox siempre TODO PREGUNTAR -> pq me tienen que dar las coords nominales de la nueva sala
+   		//qDebug()<<max_match_error; //funciona? 3000 de error aprox siempre
        //print_match(match, max_match_error); //debugging
    }
 
@@ -153,8 +156,21 @@ void SpecificWorker::compute()
    //
    //
    // // update robot pose
-    if (localised)
-        update_robot_pose(corners, match);
+    if (localised) {
+	    update_robot_pose(corners, match);
+    	localised = false;
+    }
+	std::tuple<STATE,float,float> result;
+	if (match.size() < 3) localised = true;
+	const auto &[st, adv, rot] = process_state(data, corners, match, viewer); // Machine states method
+	state = st;
+	try{ omnirobot_proxy->setSpeedBase(0, adv, rot);}
+	catch (const Ice::Exception &e){ std::cout << e << " " << "Conexión con Laser" << std::endl; return;}
+
+
+
+
+
    //
    //
    // // Process state machine
@@ -183,16 +199,16 @@ void SpecificWorker::compute()
    // lcdNumber_angle->display(angle);
    // last_time = std::chrono::high_resolution_clock::now();;
 }
-bool SpecificWorker::update_robot_pose(const Corners &corners, const Match &match) {
+std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, AbstractGraphicViewer *viewer){
 
-}
-std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, std::optional<Eigen::Vector2d> center, AbstractGraphicViewer *viewer){
-
-	Eigen::Vector2f centro = center.value().cast<float>();
 	std::tuple<STATE, float, float> result;
 	switch (this->state) {
 		case STATE::IDLE:
 			break; //no hacer nada
+		case STATE::GOTO_ROOM_CENTER:
+			result = goto_room_center(data);
+			break;
+			/*
 		case STATE::LOCALISE:
 			result = localise(match);
 			break;
@@ -205,12 +221,10 @@ std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLida
 		case STATE::ORIENT_TO_DOOR:
 			result = orient_to_door(data);
 			break;
-		case STATE::GOTO_ROOM_CENTER:
-			result = goto_room_center(data, centro);
-			break;
 		case STATE::CROSS_DOOR:
 			result = cross_door(data);
 			break;
+			*/
 		default:
 			break;
 	}
@@ -367,7 +381,7 @@ RoboCompLidar3D::TPoints SpecificWorker::filtro_datos()
 	RoboCompLidar3D::TPoints  p_filter;
 	try
 	{
-		auto data = lidar3d_proxy->getLidarData("pearl", 0, 2*M_PI, 2); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
+		auto data = lidar3d_proxy->getLidarDataWithThreshold2d("helios", 12000, 2); //para mayor precision (puedo comparar ejemplos de ejecucion entre este y 0.1f round en la docu)
 		//qInfo() << "Size: "<<data.points.size();
 		if (data.points.empty()){qDebug()<<"No points"; return p_filter;}
 
@@ -448,46 +462,112 @@ void SpecificWorker::update_robot_position() {
 	catch (const Ice::Exception& e){std::cout<<e.what();}
 }
 
-std::tuple<STATE, float, float> SpecificWorker::goto_room_center(const RoboCompLidar3D::TPoints &points, const Eigen::Vector2f& centro) {
-	std::tuple<float,float> res = robot_controller(centro); //hay que moverse una vez en principio no mas
+SpecificWorker::RetVal SpecificWorker::goto_room_center(const RoboCompLidar3D::TPoints& points)
+{
+	auto center = room_detector.estimate_center_from_walls();
 
-	std::tuple<STATE, float, float> toReturn {
-		STATE::GOTO_ROOM_CENTER,
-		std::get<0>(res),
-		std::get<1>(res)
-	};
+	// Mostrar el valor calculado del centro
+	if (center.has_value()) {
+		/*
+		qInfo() << "Centro estimado de la habitación:"
+				<< "x =" << center.value().x()
+				<< ", y =" << center.value().y();
+				*/
+	} else {
+		//qWarning() << "No se pudo estimar el centro de la habitación";
+		return {STATE::GOTO_ROOM_CENTER, 0.0f, 0.0f};
+	}
 
-	return toReturn; //TODO: igual hay que hacer mas cosas antes de esto
+	// 1. Comprobar si existe el centro
+	if (!center.has_value())
+	{
+		//qWarning() << "No se pudo estimar el centro de la habitación";
+		return {STATE::GOTO_ROOM_CENTER, 0.0f, 0.0f};
+	}
+
+	// 2. Convertir Vector2d → Vector2f
+	Eigen::Vector2f center_f = center.value().cast<float>();
+
+	// 3. Llamar al controlador
+	auto [v, w] = robot_controller(center_f);
+
+	// 4. Devolver estado, avance y rotación
+	return {STATE::GOTO_ROOM_CENTER, v, w};
+
 }
 
 
-std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f &point){
-
-//TODO
+std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f &target)
+{
+	//TODO
 	static float old_theta = 0; //la primera vez tendra valor 0
 	float new_theta, inc_theta, rot;
 	float sigma = M_PI / 4;
-	float kp = 2.0f;
-	float kd = 0.5f;
+	float kp = 0.5f;
+	float kd = 2;
+	float k = 10; //10, termino medio
+	float d_stop = 600.0f; //le pongo 600 a la distancia de freno
 
+	const double x = target.x();
+	const double y = target.y();
 
-	const double x = point.x();
-	const double y = point.y();
+	new_theta = std::atan2(x, y);
+	rot = (kp * new_theta); //+ (kd * inc_theta);
 
-	new_theta = std::atan2(y, x);
-	inc_theta = (new_theta - old_theta) / 0.1;
-	rot = (kp * new_theta) + (kd * inc_theta);
-	old_theta = new_theta;
+	float d = std::sqrt(x*x + y*y);
+	float f_zero = std::exp(- (new_theta*new_theta)/(2*sigma*sigma));
+	float f_d = 1/ (1+std::exp(k/(0.01f+d-d_stop))); //TODO: Es mejor? nose, hacer pruebas
 
-	float f_theta = std::exp( - (new_theta* new_theta) / (2.0 * sigma * sigma) );
+	//vmax = 800
+	float v = 800 * f_zero * f_d;
 
-	float v =params.MAX_ADV_SPEED*f_theta;
-
-
+	qDebug()<<"D es: "<<d;
+	qDebug()<<"f_zero es: "<<f_zero;
+	qDebug()<<"f_d es: "<<f_d;
+	qDebug()<<"v es: "<<v;
+	qDebug()<<"El resultado del exp de la formula de f_d es: "<<std::exp(k/(0.01f+d-d_stop));
+	//debe devolver v y rot en vez de 0, 0
+	return {v, rot};
 }
 
+//TODO: Funciona pero un poco raro, como a tirones, probar a añadir lo que tenia en la act 2 de prevencion de errores
+//TODO: Enseñarle a Pablo el bug de que se "invierte" la habitacion a lo largo de la ejecucion
+bool SpecificWorker::update_robot_pose(const Corners& corners, const Match& match)
+{
+	Eigen::MatrixXd W(match.size() * 2, 3);
+	Eigen::VectorXd b(match.size() * 2);
+	for (auto &&[i,m]: match | iter::enumerate )
+	{
+		auto &[meas_c, nom_c, _] = m;
+		auto &[p_meas, __, ___] = meas_c;
+		auto &[p_nom, ____, _____] = nom_c;
 
+		b(2 * i)     = p_nom.x() - p_meas.x();
 
+		b(2 * i + 1) = p_nom.y() - p_meas.y();
+		W.block<1, 3>(2 * i, 0)     << 1.0, 0.0, -p_meas.y();
+		W.block<1, 3>(2 * i + 1, 0) << 0.0, 1.0, p_meas.x();
+	}
+
+	// estimate new pose with pseudoinverse
+	const Eigen::Vector3d r = (W.transpose() * W).inverse() * W.transpose() * b;
+	std::cout << r << std::endl;
+	//qInfo() << "--------------------";
+
+	if (r.array().isNaN().any()) {
+		qDebug()<<"No dibujo porque hay NaN";
+		return {};
+	}
+
+	robot_pose.translate(Eigen::Vector2d(r(0), r(1)));
+	robot_pose.rotate(r[2]);
+	qDebug()<<"Voy a dibujarlo en las coords: "<<robot_pose.translation().x()<<"/////"<<robot_pose.translation().y();
+	robot_room_draw->setPos(robot_pose.translation().x(), robot_pose.translation().y());
+	const double angle = std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0));
+	robot_room_draw->setRotation(qRadiansToDegrees(angle));
+
+	return false; //TODO: Cambiar mas adelante
+}
 
 
 

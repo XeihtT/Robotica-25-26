@@ -56,7 +56,7 @@
 #include "nominal_room.h"
 #include "door_detector.h"
 #include "image_processor.h"
-
+#include "nominal_room.h"
 
 /**
  * \brief Class SpecificWorker implements the core functionality of the component.
@@ -81,37 +81,6 @@ public:
      * \brief Destructor for SpecificWorker.
      */
 	~SpecificWorker();
-
-	struct NominalRoom {
-		float width;   // mm
-		float length;  // mm
-		Corners corners;
-		QRectF rect = QRectF(-5000, -2500, 10000, 5000);
-		NominalRoom(
-			const float width_ = 10000.f,
-			const float length_ = 5000.f,
-			Corners corners_ = {}
-		) : width(width_), length(length_), corners(std::move(corners_)) {}
-
-		// Transforma las esquinas con una matriz de transformación
-		// Para pasar de habitación a robot, usa el inverso de robot_pose
-		Corners transform_corners_to(const Eigen::Affine2d &transform) const {
-			Corners transformed_corners;
-			for (const auto &[p, _, __] : corners) {
-				Eigen::Vector2d ep(p.x(), p.y());
-				Eigen::Vector2d tp = transform * ep;
-				transformed_corners.emplace_back(
-					QPointF(static_cast<float>(tp.x()), static_cast<float>(tp.y())),
-					0.f,
-					0.f
-				);
-			}
-			return transformed_corners;
-		}
-	};
-
-
-
 
 public slots:
 
@@ -204,6 +173,7 @@ private:
 
 	//room
 	rc::Room_Detector room_detector;
+	/*
 	NominalRoom rooms[2] = {
 		{
 			10000.f, 5000.f,
@@ -216,8 +186,8 @@ private:
 		},
 		{} // segundo NominalRoom vacío (constructor por defecto)
 	};
-
-
+	*/
+	std::vector<NominalRoom> rooms{ NominalRoom{5500.f, 4000.f}, NominalRoom{8000.f, 4000.f}};
 	//robot
 	Eigen::Affine2d robot_pose;
 	//match
@@ -267,14 +237,17 @@ private:
 	}
 	STATE state = STATE::GOTO_ROOM_CENTER;
 	using RetVal = std::tuple<STATE, float, float>;
+	/*
 	RetVal goto_door(const RoboCompLidar3D::TPoints &points);
 	RetVal orient_to_door(const RoboCompLidar3D::TPoints &points);
 	RetVal cross_door(const RoboCompLidar3D::TPoints &points);
 	RetVal localise(const Match &match);
-	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points, const Eigen::Vector2f& centro);
 	RetVal update_pose(const Corners &corners, const Match &match);
 	RetVal turn(const Corners &corners);
-	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, std::optional<Eigen::Vector2d> center, AbstractGraphicViewer *viewer);
+	*/
+
+	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points);
+	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, AbstractGraphicViewer *viewer);
 
 	// viewer
 	AbstractGraphicViewer *viewer, *viewer_room;
