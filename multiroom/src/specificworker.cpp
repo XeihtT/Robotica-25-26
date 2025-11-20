@@ -208,16 +208,17 @@ std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLida
 		case STATE::GOTO_ROOM_CENTER:
 			result = goto_room_center(data);
 			break;
-			/*
-		case STATE::LOCALISE:
-			result = localise(match);
+		case STATE::TURN:
+			result = turn(corners);
 			break;
 		case STATE::GOTO_DOOR:
 			result = goto_door(data);
 			break;
-		case STATE::TURN:
-			result = turn(corners);
+			/*
+		case STATE::LOCALISE:
+			result = localise(match);
 			break;
+
 		case STATE::ORIENT_TO_DOOR:
 			result = orient_to_door(data);
 			break;
@@ -466,6 +467,9 @@ SpecificWorker::RetVal SpecificWorker::goto_room_center(const RoboCompLidar3D::T
 {
 	auto center = room_detector.estimate_center_from_walls();
 
+	if (center->norm() < 100.0f)
+		return {STATE::TURN, 0, 0};
+
 	// Mostrar el valor calculado del centro
 	if (center.has_value()) {
 		/*
@@ -529,6 +533,33 @@ std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f 
 	//debe devolver v y rot en vez de 0, 0
 	return {v, rot};
 }
+
+std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
+
+	auto center = room_detector.estimate_center_from_walls();
+
+	auto image = image_processor.check_colour_patch_in_image(camera360rgb_proxy, QColorConstants::Svg::red, nullptr, 1000);
+	if (std::get<0>(image))
+		return {STATE::GOTO_DOOR, 0.0f, 0};
+
+	return {STATE::TURN, 0.0f, std::get<1>(image)*0.3f};
+}
+
+// TODO: llamar a orientarse a la puerta, y luego cruzarla ciegamente, practicamente esta
+std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D::TPoints &points) {
+	Doors doors = door_detector.doors();
+	auto center = room_detector.estimate_center_from_walls();
+	auto point = doors.at(0).center_before(center.value(), 500);
+
+	//if (point.norm() < 100.0f)
+	//	return {STATE::ORIENT_TO_DOOR, 0.0f, 0.0f};
+
+	auto [v, w] = robot_controller(point);
+	return {STATE::GOTO_DOOR, v, w};
+
+
+}
+
 
 //TODO: Funciona pero un poco raro, como a tirones, probar a añadir lo que tenia en la act 2 de prevencion de errores
 //TODO: Enseñarle a Pablo el bug de que se "invierte" la habitacion a lo largo de la ejecucion

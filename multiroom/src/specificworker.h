@@ -235,16 +235,20 @@ private:
 		default:                        return "UNKNOWN";
 		}
 	}
+
 	STATE state = STATE::GOTO_ROOM_CENTER;
 	using RetVal = std::tuple<STATE, float, float>;
-	/*
 	RetVal goto_door(const RoboCompLidar3D::TPoints &points);
 	RetVal orient_to_door(const RoboCompLidar3D::TPoints &points);
+
+
+	/*
 	RetVal cross_door(const RoboCompLidar3D::TPoints &points);
 	RetVal localise(const Match &match);
 	RetVal update_pose(const Corners &corners, const Match &match);
-	RetVal turn(const Corners &corners);
 	*/
+	RetVal turn(const Corners &corners);
+
 
 	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points);
 	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, AbstractGraphicViewer *viewer);
