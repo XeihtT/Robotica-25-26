@@ -57,7 +57,7 @@
 #include "door_detector.h"
 #include "image_processor.h"
 #include "nominal_room.h"
-
+#include "pointcloud_center_estimator.h"
 /**
  * \brief Class SpecificWorker implements the core functionality of the component.
  */
@@ -201,7 +201,7 @@ private:
 
 	// doors
 	DoorDetector door_detector;
-
+	rc::PointcloudCenterEstimator centro;
 	// image processor
 	rc::ImageProcessor image_processor;
 
@@ -242,8 +242,9 @@ private:
 	RetVal orient_to_door(const RoboCompLidar3D::TPoints &points);
 
 
-	/*
+
 	RetVal cross_door(const RoboCompLidar3D::TPoints &points);
+	/*
 	RetVal localise(const Match &match);
 	RetVal update_pose(const Corners &corners, const Match &match);
 	*/

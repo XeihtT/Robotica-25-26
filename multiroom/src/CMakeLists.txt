@@ -7,7 +7,7 @@ LIST(APPEND SOURCES
         ../src/time_series_plotter.cpp
         ../src/door_detector.cpp
         ../src/qcustomplot.cpp
-
+        ../src/pointcloud_center_estimator.cpp
 )
 
 # Headers set
@@ -21,6 +21,7 @@ LIST(APPEND HEADERS
         ../src/image_processor.h
         ../src/door_detector.h
         ../src/qcustomplot.h
+        ../src/pointcloud_center_estimator.h
 )
 
 INCLUDE($ENV{ROBOCOMP}/cmake/modules/opencv4.cmake)

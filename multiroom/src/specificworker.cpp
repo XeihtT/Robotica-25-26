@@ -22,6 +22,8 @@ float MIN_TO_WALL_FORWARD = 1100.0f; //Distancia minima que el robot tendra a un
 float MIN_TO_WALL_FOLLOW = 900;
 int turn_way = 1;
 
+chrono::time_point<chrono::steady_clock, chrono::steady_clock::duration> first_time;
+
 //Ahora mismo esta OK pero se sigue chocando un pelin (muy poco, mas bien roce) //TODO: Mirarlo mañana con obstaculos
 //float dist_threshold=1900;
 //Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
@@ -130,7 +132,7 @@ void SpecificWorker::compute()
 
    // compute corners
    const auto &[corners, lines] = room_detector.compute_corners(data, &viewer->scene);
-   const auto center_opt = room_detector.estimate_center_from_walls(lines);
+   const auto center_opt = centro.estimate(data);
    draw_lidar(data, center_opt, &viewer->scene);
 
 	//qDebug()<<"Se han medido "<<corners.size()<<" esquinas";
@@ -164,6 +166,7 @@ void SpecificWorker::compute()
 	if (match.size() < 3) localised = true;
 	const auto &[st, adv, rot] = process_state(data, corners, match, viewer); // Machine states method
 	state = st;
+	qDebug()<<"El state es: "<<to_string(st);
 	try{ omnirobot_proxy->setSpeedBase(0, adv, rot);}
 	catch (const Ice::Exception &e){ std::cout << e << " " << "Conexión con Laser" << std::endl; return;}
 
@@ -214,16 +217,15 @@ std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLida
 		case STATE::GOTO_DOOR:
 			result = goto_door(data);
 			break;
-			/*
-		case STATE::LOCALISE:
-			result = localise(match);
-			break;
-
 		case STATE::ORIENT_TO_DOOR:
 			result = orient_to_door(data);
 			break;
 		case STATE::CROSS_DOOR:
 			result = cross_door(data);
+			break;
+			/*
+		case STATE::LOCALISE: //nose que es este estado xd
+			result = localise(match);
 			break;
 			*/
 		default:
@@ -462,32 +464,19 @@ void SpecificWorker::update_robot_position() {
 	}
 	catch (const Ice::Exception& e){std::cout<<e.what();}
 }
-
+//TODO: PREGUNTAR A PABLO, EN EL ESCENARIO DISPLACED2 DA VIOLACION DE SEGMENTO ESTE METODO
 SpecificWorker::RetVal SpecificWorker::goto_room_center(const RoboCompLidar3D::TPoints& points)
 {
-	auto center = room_detector.estimate_center_from_walls();
+	auto center = centro.estimate(points);
 
-	if (center->norm() < 100.0f)
+	if (!center.has_value())
+		return{STATE::GOTO_ROOM_CENTER, 0, 0}; //devuelvo el mismo estado pero sin cambiar nada para que en la proxima iteracion si pille el centro
+		//igualmente es necesario upgradear el estimador del centro
+	//TODO: RECOMPILAR ANTES DE NUEVOS TEST
+
+	if (center->norm() < 100.0f) //el problema esta aqui
 		return {STATE::TURN, 0, 0};
 
-	// Mostrar el valor calculado del centro
-	if (center.has_value()) {
-		/*
-		qInfo() << "Centro estimado de la habitación:"
-				<< "x =" << center.value().x()
-				<< ", y =" << center.value().y();
-				*/
-	} else {
-		//qWarning() << "No se pudo estimar el centro de la habitación";
-		return {STATE::GOTO_ROOM_CENTER, 0.0f, 0.0f};
-	}
-
-	// 1. Comprobar si existe el centro
-	if (!center.has_value())
-	{
-		//qWarning() << "No se pudo estimar el centro de la habitación";
-		return {STATE::GOTO_ROOM_CENTER, 0.0f, 0.0f};
-	}
 
 	// 2. Convertir Vector2d → Vector2f
 	Eigen::Vector2f center_f = center.value().cast<float>();
@@ -503,7 +492,6 @@ SpecificWorker::RetVal SpecificWorker::goto_room_center(const RoboCompLidar3D::T
 
 std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f &target)
 {
-	//TODO
 	static float old_theta = 0; //la primera vez tendra valor 0
 	float new_theta, inc_theta, rot;
 	float sigma = M_PI / 4;
@@ -520,7 +508,7 @@ std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f 
 
 	float d = std::sqrt(x*x + y*y);
 	float f_zero = std::exp(- (new_theta*new_theta)/(2*sigma*sigma));
-	float f_d = 1/ (1+std::exp(k/(0.01f+d-d_stop))); //TODO: Es mejor? nose, hacer pruebas
+	float f_d = 1/ (1+std::exp(k/(0.01f+d-d_stop))); //la alternativa con el signo - y multiplicando funciona peor
 
 	//vmax = 800
 	float v = 800 * f_zero * f_d;
@@ -536,8 +524,6 @@ std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f 
 
 std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
 
-	auto center = room_detector.estimate_center_from_walls();
-
 	auto image = image_processor.check_colour_patch_in_image(camera360rgb_proxy, QColorConstants::Svg::red, nullptr, 1000);
 	if (std::get<0>(image))
 		return {STATE::GOTO_DOOR, 0.0f, 0};
@@ -547,12 +533,20 @@ std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
 
 // TODO: llamar a orientarse a la puerta, y luego cruzarla ciegamente, practicamente esta
 std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D::TPoints &points) {
-	Doors doors = door_detector.doors();
-	auto center = room_detector.estimate_center_from_walls();
-	auto point = doors.at(0).center_before(center.value(), 500);
+	std::expected<Door, std::string> doors = door_detector.get_current_door();
+	auto center = centro.estimate(points);
 
-	//if (point.norm() < 100.0f)
-	//	return {STATE::ORIENT_TO_DOOR, 0.0f, 0.0f};
+	Eigen::Vector2f point;
+
+	if (doors.has_value() && center.has_value()) {
+		point = doors.value().center_before(center.value(), 500);
+	}
+	else {
+		return{STATE::GOTO_DOOR, 0.0f, 0.0f};//no hago nada para esperar una buena lectura de la puerta
+	}
+
+	if (point.norm() < 100.0f)
+		return {STATE::ORIENT_TO_DOOR, 0.0f, 0.0f};
 
 	auto [v, w] = robot_controller(point);
 	return {STATE::GOTO_DOOR, v, w};
@@ -560,6 +554,94 @@ std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D:
 
 }
 
+
+std::tuple<STATE, float, float> SpecificWorker::orient_to_door(const RoboCompLidar3D::TPoints &points) {
+	/*
+	std::expected<Door, std::string> doors = door_detector.get_current_door();
+
+	if (!doors.has_value()) {
+		return{STATE::ORIENT_TO_DOOR, 0.0f, 0.0f};
+	}
+
+	auto door = doors.value();
+	Eigen::Vector2f middle_point=(door.p1 + door.p2)/2;
+	Eigen::Vector2f robot(robot_pose.translation().x(), robot_pose.translation().y());
+
+	Eigen::Vector2f v1 = middle_point - robot;  // robot → centro puerta
+	Eigen::Vector2f v2 = door.p2 - door.p1;      // dirección de la puerta
+
+	// --- 5. Normalizar ---
+	Eigen::Vector2f v1n = v1.normalized();
+	Eigen::Vector2f v2n = v2.normalized();
+
+	float dot = v1n.dot(v2n);
+	qDebug()<<"Producto escalar pre clamp: "<<dot;
+	//dot = std::clamp(dot, -1.0f, 1.0f);         // evitar NaN (lo mismo me lo estoy cargando con esto)
+	float angle = std::acos(dot/ v1.norm()*v2.norm()); //igual la division no es necesaria con el PI/2
+
+	// --- 7. Queremos que angle -> pi/2 ---
+	float error = angle - M_PI/2;
+	qDebug()<<"El angulo calculado es: "<<angle;
+
+	// --- 9. Si el ángulo es suficientemente bueno, pasamos de estado ---
+	if (std::abs(error) < 0.075) {// poco más de ~3°
+		first_time = std::chrono::steady_clock::now(); //empezamos a contar
+		return {STATE::CROSS_DOOR, 0, 0.0f};
+	}
+
+	// Sino seguimos girando
+	return {STATE::ORIENT_TO_DOOR, 0, 0.25};
+	*/
+
+	//Metodo alternativo (el anterior no funciona muy bien): Mirar cuántos puntos hay enfrente en el lidar
+
+	std::expected<Door, std::string> doors = door_detector.get_current_door();
+
+	if (!doors.has_value()) {
+		return{STATE::ORIENT_TO_DOOR, 0.0f, 0.0f};
+	}
+
+	auto door = doors.value();
+	Eigen::Vector2f middle_point=(door.p1 + door.p2)/2;
+
+	static float old_theta = 0; //la primera vez tendra valor 0
+	float new_theta, inc_theta, rot;
+	float sigma = M_PI / 4;
+	float kp = 0.5f;
+	float kd = 2;
+	float k = 10; //10, termino medio
+	float d_stop = 600.0f; //le pongo 600 a la distancia de freno
+
+	const double x = middle_point.x();
+	const double y = middle_point.y();
+
+	new_theta = std::atan2(x, y);
+	rot = (kp * new_theta); //+ (kd * inc_theta);
+
+	if (std::abs(rot) >= 0.01   && std::abs(rot) <= 0.1) { //mucho mas?
+		first_time = std::chrono::steady_clock::now(); //empezamos a contar
+		return{STATE::CROSS_DOOR, 1000.0f, 0.0f};
+	}
+	else {
+		return {STATE::ORIENT_TO_DOOR, 0.0f, rot};
+	}
+
+}
+
+
+std::tuple<STATE, float, float> SpecificWorker::cross_door(const RoboCompLidar3D::TPoints &points) {
+	static auto first = std::chrono::steady_clock::now();
+
+	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>( //para ver cuánto tiempo ha pasado desde la primera llamada
+				   std::chrono::steady_clock::now() - first_time)
+				   .count();
+
+
+	float v = elapsed < 2 ? 1000.0f : 0;
+	STATE s = elapsed < 2 ? STATE::CROSS_DOOR : STATE::GOTO_ROOM_CENTER;
+
+	return std::make_tuple(s, v, 0);
+}
 
 //TODO: Funciona pero un poco raro, como a tirones, probar a añadir lo que tenia en la act 2 de prevencion de errores
 //TODO: Enseñarle a Pablo el bug de que se "invierte" la habitacion a lo largo de la ejecucion
