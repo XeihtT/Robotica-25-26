@@ -89,6 +89,8 @@ public slots:
 
 	//Chocachoca
 	void draw_lidar(const RoboCompLidar3D::TPoints &filtered_points, std::optional<Eigen::Vector2d> center, QGraphicsScene *scene);
+	void draw_lidar2( QGraphicsScene *scene, int i);
+
 	//void draw_lidar(const RoboCompLidar3D::TPoints &filtered_points, QGraphicsScene *scene);
 
 /**
@@ -172,6 +174,7 @@ private:
 	// graphics
 
 	//room
+	int room = 0;
 	rc::Room_Detector room_detector;
 	/*
 	NominalRoom rooms[2] = {

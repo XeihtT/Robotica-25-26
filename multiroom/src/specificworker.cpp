@@ -21,6 +21,7 @@
 float MIN_TO_WALL_FORWARD = 1100.0f; //Distancia minima que el robot tendra a una pared antes de que este empiece a girar
 float MIN_TO_WALL_FOLLOW = 900;
 int turn_way = 1;
+std::vector<QGraphicsItem*> room_items;
 
 chrono::time_point<chrono::steady_clock, chrono::steady_clock::duration> first_time;
 
@@ -96,7 +97,7 @@ void SpecificWorker::initialize()
 		auto [rr, re] = viewer_room->add_robot(params.ROBOT_WIDTH, params.ROBOT_LENGTH, 0, 100, QColor("Blue"));
 		robot_room_draw = rr;
 		// draw room in viewer_room
-		viewer_room->scene.addRect(rooms[0].rect(), QPen(Qt::black, 30));
+		room_items.push_back(viewer_room->scene.addRect(rooms[0].rect(), QPen(Qt::black, 30)));
 		//viewer_room->show();
 		show();
 
@@ -167,6 +168,7 @@ void SpecificWorker::compute()
 	const auto &[st, adv, rot] = process_state(data, corners, match, viewer); // Machine states method
 	state = st;
 	qDebug()<<"El state es: "<<to_string(st);
+	label_state->setText(QString::fromStdString(to_string(st)));
 	try{ omnirobot_proxy->setSpeedBase(0, adv, rot);}
 	catch (const Ice::Exception &e){ std::cout << e << " " << "Conexión con Laser" << std::endl; return;}
 
@@ -188,19 +190,19 @@ void SpecificWorker::compute()
    //
    //
    // // draw robot in viewer
-   // robot_room_draw->setPos(robot_pose.translation().x(), robot_pose.translation().y());
-   // const double angle = qRadiansToDegrees(std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0)));
-   // robot_room_draw->setRotation(angle);
+   robot_room_draw->setPos(robot_pose.translation().x(), robot_pose.translation().y());
+   const double angle = qRadiansToDegrees(std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0)));
+   robot_room_draw->setRotation(angle);
    //
    //
-   // // update GUI
-   // time_series_plotter->update();
-   // lcdNumber_adv->display(adv);
-   // lcdNumber_rot->display(rot);
-   // lcdNumber_x->display(robot_pose.translation().x());
-   // lcdNumber_y->display(robot_pose.translation().y());
-   // lcdNumber_angle->display(angle);
-   // last_time = std::chrono::high_resolution_clock::now();;
+    // update GUI
+    time_series_plotter->update();
+   lcdNumber_adv->display(adv);
+   lcdNumber_rot->display(rot);
+   lcdNumber_x->display(robot_pose.translation().x());
+   lcdNumber_y->display(robot_pose.translation().y());
+   lcdNumber_angle->display(angle);
+   last_time = std::chrono::high_resolution_clock::now();;
 }
 std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, AbstractGraphicViewer *viewer){
 
@@ -289,7 +291,6 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
     }
 
 	//Adicional de la actividad 3 multiroom para dibujar el centro de la sala
-
 	if(center.has_value())
 	{
 		const double x = center->x();
@@ -306,7 +307,6 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
 		items.push_back(centro);
 	}
 
-
     // compute and draw minimum distance point in frontal range
     auto offset_begin = closest_lidar_index_to_given_angle(filtered_points, -0.05); //params.LIDAR_FRONT_SECTION = -10
     auto offset_end = closest_lidar_index_to_given_angle(filtered_points, 0.05); //params.LIDAR_FRONT_SECTION = +10
@@ -314,11 +314,19 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
 	if(not offset_begin or not offset_end)
 	{ std::cout << offset_begin.error() << " " << offset_end.error() << std::endl; return ;}    // abandon the ship
 
+
+
+	if (offset_begin.value() >= filtered_points.size() ||
+		offset_end.value() > filtered_points.size() ||
+		offset_begin.value() >= offset_end.value()) {
+		qDebug()<< "Offsets fuera de rango";
+		return;
+		}
+
     auto min_point = std::min_element(std::begin(filtered_points) + offset_begin.value(), std::begin(filtered_points) + offset_end.value(), [](auto &a, auto &b)
     { return a.distance2d < b.distance2d; });
 
     QColor dcolor;
-
     if(min_point->distance2d < 800) //800 de momento = params.STOP_THRESHOLD
         dcolor = QColor(Qt::red);
     else
@@ -343,10 +351,10 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
     auto item = scene->addRect(-100, -100, 200, 200, QColor(QColorConstants::Svg::orange), QBrush(QColor(QColorConstants::Svg::orange)));
     item->setPos(min_obj.x, min_obj.y);
     items.push_back(item);
+
     // draw a line from the robot to the minimum distance point
     auto item_line = scene->addLine(QLineF(QPointF(0.f, 0.f), QPointF(min_obj.x, min_obj.y)), QPen(QColorConstants::Svg::orange, 10));
     items.push_back(item_line);
-
     // Draw two lines coming out from the robot at angles given by params.LIDAR_OFFSET
     // Calculate the end points of the lines
 	auto res_right = closest_lidar_index_to_given_angle(filtered_points, 0.005); //params.LIDAR_FRONT_SECTION = 0.005
@@ -371,8 +379,20 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
     auto line2 = scene->addLine(line_right, right_pen);
     items.push_back(line1);
     items.push_back(line2);
-
 }
+
+void SpecificWorker::draw_lidar2(QGraphicsScene *scene, int i)
+{
+	// remove all items drawn in the previous iteration
+	for(auto i: room_items)
+	{
+		scene->removeItem(i);
+		delete i;
+	}
+	room_items.clear();
+	room_items.push_back(scene->addRect(rooms[i].rect(), QPen(Qt::black, 30)));
+}
+
 void SpecificWorker::new_target_slot(QPointF p)
 {
 	std::cout << "Nuevo target recibido en: ("
@@ -523,8 +543,8 @@ std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f 
 }
 
 std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
-
-	auto image = image_processor.check_colour_patch_in_image(camera360rgb_proxy, QColorConstants::Svg::red, nullptr, 1000);
+	std::vector<QColor> colors = { QColorConstants::Svg::red, QColorConstants::Svg::green};
+	auto image = image_processor.check_colour_patch_in_image(camera360rgb_proxy, colors[room], nullptr, 1000);
 	if (std::get<0>(image))
 		return {STATE::GOTO_DOOR, 0.0f, 0};
 
@@ -631,7 +651,6 @@ std::tuple<STATE, float, float> SpecificWorker::orient_to_door(const RoboCompLid
 
 std::tuple<STATE, float, float> SpecificWorker::cross_door(const RoboCompLidar3D::TPoints &points) {
 	static auto first = std::chrono::steady_clock::now();
-
 	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>( //para ver cuánto tiempo ha pasado desde la primera llamada
 				   std::chrono::steady_clock::now() - first_time)
 				   .count();
@@ -639,6 +658,16 @@ std::tuple<STATE, float, float> SpecificWorker::cross_door(const RoboCompLidar3D
 
 	float v = elapsed < 2 ? 1000.0f : 0;
 	STATE s = elapsed < 2 ? STATE::CROSS_DOOR : STATE::GOTO_ROOM_CENTER;
+
+	if (elapsed < 2)
+		s = STATE::CROSS_DOOR;
+	else
+	{
+		room = (room + 1) % rooms.size();
+		draw_lidar2(&viewer_room->scene, room);
+		s = STATE::GOTO_ROOM_CENTER;
+
+	}
 
 	return std::make_tuple(s, v, 0);
 }
