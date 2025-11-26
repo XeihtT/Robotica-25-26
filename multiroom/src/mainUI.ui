@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Localiser</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_5">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
@@ -65,9 +65,9 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <layout class="QHBoxLayout" name="horizontalLayout_11">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_18">
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
          <item>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
@@ -177,6 +177,24 @@
              </item>
              <item>
               <widget class="QLabel" name="label_state">
+               <property name="text">
+                <string>TextLabel</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_state_name_2">
+               <property name="text">
+                <string>state:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_state_2">
                <property name="text">
                 <string>TextLabel</string>
                </property>

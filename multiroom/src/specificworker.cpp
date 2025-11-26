@@ -140,8 +140,9 @@ void SpecificWorker::compute()
 
 
    //match corners  transforming first nominal corners to robot's frame
-   const auto match = hungarian.match(corners, rooms[0].transform_corners_to(robot_pose.inverse()));
-	//qDebug()<<"El match es de "<<match.size()<<" esquinas";
+   const auto match = hungarian.match(corners, rooms[room].transform_corners_to(robot_pose.inverse()));
+
+	qDebug()<<"El match es de "<<match.size()<<" esquinas";
    // compute max of  match error
    float max_match_error = 99999.f;
    if (not match.empty())
@@ -160,15 +161,24 @@ void SpecificWorker::compute()
    //
    // // update robot pose
     if (localised) {
-	    update_robot_pose(corners, match);
-    	localised = false;
+	    update_robot_pose(corners, match); //igual hay que volver a lo que estaba antes
     }
 	std::tuple<STATE,float,float> result;
-	if (match.size() < 3) localised = true;
+	if (match.size() < 3)
+		localised = false;
+	else
+		localised = true;
+
+
 	const auto &[st, adv, rot] = process_state(data, corners, match, viewer); // Machine states method
 	state = st;
 	qDebug()<<"El state es: "<<to_string(st);
 	label_state->setText(QString::fromStdString(to_string(st)));
+
+	std::string location = localised ? "Localised" : "Not localised";
+
+	label_state_2->setText(QString::fromStdString(location));
+
 	try{ omnirobot_proxy->setSpeedBase(0, adv, rot);}
 	catch (const Ice::Exception &e){ std::cout << e << " " << "Conexión con Laser" << std::endl; return;}
 
@@ -190,12 +200,13 @@ void SpecificWorker::compute()
    //
    //
    // // draw robot in viewer
-   robot_room_draw->setPos(robot_pose.translation().x(), robot_pose.translation().y());
+   //robot_room_draw->setPos(robot_pose.translation().x(), robot_pose.translation().y());
    const double angle = qRadiansToDegrees(std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0)));
-   robot_room_draw->setRotation(angle);
+   //robot_room_draw->setRotation(angle);
    //
    //
-    // update GUI
+   //// update GUI
+   ///
     time_series_plotter->update();
    lcdNumber_adv->display(adv);
    lcdNumber_rot->display(rot);
