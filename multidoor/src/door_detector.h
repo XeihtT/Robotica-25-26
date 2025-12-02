@@ -18,8 +18,11 @@ class DoorDetector
 
         Doors detect(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene = nullptr);
         RoboCompLidar3D::TPoints filter_points(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene);
+        RoboCompLidar3D::TPoints filter_points1(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene);
         [[nodiscard]] Doors doors() const { return doors_cache; };
         [[nodiscard]] std::expected<Door, std::string> get_current_door() const;
+        [[nodiscard]] std::expected<Door, std::string> get_door(int door) const;
+
 
     private:
         Doors doors_cache;

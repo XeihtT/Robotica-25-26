@@ -204,6 +204,7 @@ private:
 
 	// doors
 	DoorDetector door_detector;
+	int num_door = 0;
 	rc::PointcloudCenterEstimator centro;
 	// image processor
 	rc::ImageProcessor image_processor;

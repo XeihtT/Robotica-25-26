@@ -141,7 +141,7 @@ void SpecificWorker::compute()
    //match corners  transforming first nominal corners to robot's frame
    const auto match = hungarian.match(corners, rooms[room].transform_corners_to(robot_pose.inverse()));
 
-	qDebug()<<"El match es de "<<match.size()<<" esquinas";
+	//qDebug()<<"El match es de "<<match.size()<<" esquinas";
    // compute max of  match error
    float max_match_error = 99999.f;
    if (not match.empty())
@@ -168,7 +168,7 @@ void SpecificWorker::compute()
 
 	const auto &[st, adv, rot] = process_state(data, corners, match, viewer); // Machine states method
 	state = st;
-	qDebug()<<"El state es: "<<to_string(st);
+	//qDebug()<<"El state es: "<<to_string(st);
 	label_state->setText(QString::fromStdString(to_string(st)));
 
 	std::string location = localised ? "Localised" : "Not localised";
@@ -514,11 +514,11 @@ std::tuple<float, float> SpecificWorker::robot_controller(const Eigen::Vector2f 
 	//vmax = 800
 	float v = 800 * f_zero * f_d;
 
-	qDebug()<<"D es: "<<d;
-	qDebug()<<"f_zero es: "<<f_zero;
-	qDebug()<<"f_d es: "<<f_d;
-	qDebug()<<"v es: "<<v;
-	qDebug()<<"El resultado del exp de la formula de f_d es: "<<std::exp(k/(0.01f+d-d_stop));
+	//qDebug()<<"D es: "<<d;
+	//qDebug()<<"f_zero es: "<<f_zero;
+	//qDebug()<<"f_d es: "<<f_d;
+	//qDebug()<<"v es: "<<v;
+	//qDebug()<<"El resultado del exp de la formula de f_d es: "<<std::exp(k/(0.01f+d-d_stop));
 	//debe devolver v y rot en vez de 0, 0
 	return {v, rot};
 }
@@ -527,14 +527,19 @@ std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
 	std::vector<QColor> colors = { QColorConstants::Svg::red, QColorConstants::Svg::green};
 	auto image = image_processor.check_colour_patch_in_image(camera360rgb_proxy, colors[room], nullptr, 1000);
 	if (std::get<0>(image))
+	{
+		qDebug()<<"El size es: "<<door_detector.doors().size();
+		num_door = (num_door + 1) % door_detector.doors().size();
 		return {STATE::GOTO_DOOR, 0.0f, 0};
+	}
 
 	return {STATE::TURN, 0.0f, std::get<1>(image)*0.3f};
 }
 
 // TODO: llamar a orientarse a la puerta, y luego cruzarla ciegamente, practicamente esta
 std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D::TPoints &points) {
-	std::expected<Door, std::string> doors = door_detector.get_current_door();
+	std::expected<Door, std::string> doors = door_detector.get_door(num_door);
+
 	auto center = centro.estimate(points);
 
 	Eigen::Vector2f point;
@@ -547,7 +552,9 @@ std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D:
 	}
 
 	if (point.norm() < 100.0f)
+	{
 		return {STATE::ORIENT_TO_DOOR, 0.0f, 0.0f};
+	}
 
 	auto [v, w] = robot_controller(point);
 	return {STATE::GOTO_DOOR, v, w};
@@ -557,7 +564,7 @@ std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D:
 
 
 std::tuple<STATE, float, float> SpecificWorker::orient_to_door(const RoboCompLidar3D::TPoints &points) {
-
+	
 	std::expected<Door, std::string> doors = door_detector.get_current_door();
 
 	if (!doors.has_value()) {
@@ -634,13 +641,13 @@ bool SpecificWorker::update_robot_pose(const Corners& corners, const Match& matc
 	//qInfo() << "--------------------";
 
 	if (r.array().isNaN().any()) {
-		qDebug()<<"No dibujo porque hay NaN";
+		//qDebug()<<"No dibujo porque hay NaN";
 		return {};
 	}
 
 	robot_pose.translate(Eigen::Vector2d(r(0), r(1)));
 	robot_pose.rotate(r[2]);
-	qDebug()<<"Voy a dibujarlo en las coords: "<<robot_pose.translation().x()<<"/////"<<robot_pose.translation().y();
+	//qDebug()<<"Voy a dibujarlo en las coords: "<<robot_pose.translation().x()<<"/////"<<robot_pose.translation().y();
 	robot_room_draw->setPos(robot_pose.translation().x(), robot_pose.translation().y());
 	const double angle = std::atan2(robot_pose.rotation()(1, 0), robot_pose.rotation()(0, 0));
 	robot_room_draw->setRotation(qRadiansToDegrees(angle));

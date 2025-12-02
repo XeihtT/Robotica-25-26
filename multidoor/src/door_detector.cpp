@@ -76,8 +76,47 @@ Doors DoorDetector::detect(const RoboCompLidar3D::TPoints &points, QGraphicsScen
     return doors;
 }
 
-// Method to use the Doors vector to filter out the LiDAR points that como from a room outside the current one
 RoboCompLidar3D::TPoints DoorDetector::filter_points(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene)
+{
+    const auto doors = detect(points, scene);
+    if(doors.empty())
+        return points;
+
+    RoboCompLidar3D::TPoints filtered;
+    filtered.reserve(points.size());
+
+    for(const auto &p : points)
+    {
+        bool discard = false;
+
+        for(const auto &d : doors)
+        {
+            const float dist_to_door = d.center().norm();
+            const bool angle_wraps = d.p2_angle < d.p1_angle;
+
+            // Check angular range
+            bool in_range =
+                angle_wraps ?
+                    ((p.phi + 0.18 > d.p1_angle) || (p.phi - 0.18 < d.p2_angle)) :
+                    ((p.phi + 0.18 > d.p1_angle) && (p.phi - 0.18 < d.p2_angle));
+
+            // If the point is "through" the door → throw the point away
+            if(in_range && p.distance2d >= dist_to_door)
+            {
+                discard = true;
+                break;  // no need to check more doors
+            }
+        }
+
+        if(!discard)
+            filtered.emplace_back(p);   // ← solo se mete UNA vez
+    }
+
+    return filtered;
+}
+
+// Method to use the Doors vector to filter out the LiDAR points that como from a room outside the current one
+RoboCompLidar3D::TPoints DoorDetector::filter_points1(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene)
 {
     const auto doors = detect(points, scene);
     if(doors.empty()) return points;
@@ -121,4 +160,11 @@ std::expected<Door, std::string> DoorDetector::get_current_door() const
     if (doors_cache.empty())
         return std::unexpected<std::string>{"No doors detected"};
     return doors_cache[0];
+}
+
+std::expected<Door, std::string> DoorDetector::get_door(const int door) const
+{
+    if (doors_cache.empty())
+        return std::unexpected<std::string>{"No doors detected"};
+    return doors_cache.at(door);
 }
