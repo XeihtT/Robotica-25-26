@@ -20,8 +20,6 @@
 #define GENERICWORKER_H
 
 #include <stdint.h>
-#define USE_QTGUI
-
 
 #if Qt5_FOUND
 	#include <QtWidgets>
@@ -40,6 +38,7 @@
 #include <variant>
 #include <unordered_map>
 
+#define USE_QTGUI
 
 #include <Camera360RGB.h>
 #include <GenericBase.h>

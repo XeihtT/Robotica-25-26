@@ -18,11 +18,11 @@
  */
 
 
-/** \mainpage RoboComp::multiroom
+/** \mainpage RoboComp::multidoor
  *
  * \section intro_sec Introduction
  *
- * The multiroom component...
+ * The multidoor component...
  *
  * \section interface_sec Interface
  *
@@ -34,7 +34,7 @@
  * ...
  *
  * \subsection install2_ssec Compile and install
- * cd multiroom
+ * cd multidoor
  * <br>
  * cmake . && make
  * <br>
@@ -52,7 +52,7 @@
  *
  * \subsection execution_ssec Execution
  *
- * Just: "${PATH_TO_BINARY}/multiroom --Ice.Config=${PATH_TO_CONFIG_FILE}"
+ * Just: "${PATH_TO_BINARY}/multidoor --Ice.Config=${PATH_TO_CONFIG_FILE}"
  *
  * \subsection running_ssec Once running
  *
@@ -85,8 +85,8 @@
 
 #define USE_QTGUI
 
-#define PROGRAM_NAME    "multiroom"
-#define SERVER_FULL_NAME   "RoboComp multiroom::multiroom"
+#define PROGRAM_NAME    "multidoor"
+#define SERVER_FULL_NAME   "RoboComp multidoor::multidoor"
 
 
 template <typename ProxyType, typename ProxyPointer>
@@ -108,10 +108,10 @@ void require(const Ice::CommunicatorPtr& communicator,
 }
 
 
-class multiroom : public Ice::Application
+class multidoor : public Ice::Application
 {
 public:
-	multiroom (QString configFile, QString prfx, bool startup_check) { 
+	multidoor (QString configFile, QString prfx, bool startup_check) { 
 		this->configFile = configFile.toStdString();
 		this->prefix = prfx.toStdString();
 		this->startup_check_flag=startup_check; 
@@ -132,7 +132,7 @@ public:
 	virtual int run(int, char*[]);
 };
 
-Ice::InitializationData multiroom::getInitializationDataIce(){
+Ice::InitializationData multidoor::getInitializationDataIce(){
         Ice::InitializationData initData;
         initData.properties = Ice::createProperties();
         initData.properties->setProperty("Ice.Warn.Connections", this->configLoader.get<std::string>("Ice.Warn.Connections"));
@@ -142,14 +142,14 @@ Ice::InitializationData multiroom::getInitializationDataIce(){
 		return initData;
 }
 
-void multiroom::initialize()
+void multidoor::initialize()
 {
     this->configLoader.load(this->configFile);
 	this->configLoader.printConfig();
 	std::cout<<std::endl;
 }
 
-int multiroom::run(int argc, char* argv[])
+int multidoor::run(int argc, char* argv[])
 {
 #ifdef USE_QTGUI
 	QApplication a(argc, argv);  // GUI application
@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
 		}
 
 	}
-	multiroom app(configFile, prefix, startup_check_flag);
+	multidoor app(configFile, prefix, startup_check_flag);
 
 	return app.main(argc, argv, app.getInitializationDataIce());
 }
