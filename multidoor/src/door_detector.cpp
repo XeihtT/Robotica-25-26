@@ -104,7 +104,7 @@ RoboCompLidar3D::TPoints DoorDetector::filter_points(const RoboCompLidar3D::TPoi
             if(in_range && p.distance2d >= dist_to_door)
             {
                 discard = true;
-                break;  // no need to check more doors
+                break;
             }
         }
 
@@ -166,5 +166,6 @@ std::expected<Door, std::string> DoorDetector::get_door(const int door) const
 {
     if (doors_cache.empty())
         return std::unexpected<std::string>{"No doors detected"};
+    qDebug()<<"Hay: "<<doors_cache.size()<<" puertas y estás intentando acceder a la: "<<door;
     return doors_cache.at(door);
 }

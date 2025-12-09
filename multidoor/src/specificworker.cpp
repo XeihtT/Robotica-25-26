@@ -25,7 +25,7 @@ std::vector<QGraphicsItem*> room_items;
 
 chrono::time_point<chrono::steady_clock, chrono::steady_clock::duration> first_time;
 
-//Ahora mismo esta OK pero se sigue chocando un pelin (muy poco, mas bien roce) //TODO: Mirarlo mañana con obstaculos
+//Ahora mismo esta OK pero se sigue chocando un pelin (muy poco, mas bien roce)
 //float dist_threshold=1900;
 //Usamos sintaxis de inicializacion de lista en el constructor para inicializar los valores aleatorios
 SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, bool startup_check) : GenericWorker(configLoader, tprx), gen(rd()), rand(1700,3600), rand_turn_way(1, 2)
@@ -43,22 +43,6 @@ SpecificWorker::SpecificWorker(const ConfigLoader& configLoader, TuplePrx tprx, 
 		#ifdef HIBERNATION_ENABLED
 			hibernationChecker.start(500);
 		#endif
-		
-		// Example statemachine:
-		/***
-		//Your definition for the statesmachine (if you dont want use a execute function, use nullptr)
-		states["CustomState"] = std::make_unique<GRAFCETStep>("CustomState", period, 
-															std::bind(&SpecificWorker::customLoop, this),  // Cyclic function
-															std::bind(&SpecificWorker::customEnter, this), // On-enter function
-															std::bind(&SpecificWorker::customExit, this)); // On-exit function
-
-		//Add your definition of transitions (addTransition(originOfSignal, signal, dstState))
-		states["CustomState"]->addTransition(states["CustomState"].get(), SIGNAL(entered()), states["OtherState"].get());
-		states["Compute"]->addTransition(this, SIGNAL(customSignal()), states["CustomState"].get()); //Define your signal in the .h file under the "Signals" section.
-
-		//Add your custom state
-		statemachine.addState(states["CustomState"].get());
-		***/
 
 		statemachine.setChildMode(QState::ExclusiveStates);
 		statemachine.start();
@@ -302,7 +286,7 @@ void SpecificWorker::draw_lidar(const RoboCompLidar3D::TPoints& filtered_points,
 	if (offset_begin.value() >= filtered_points.size() ||
 		offset_end.value() > filtered_points.size() ||
 		offset_begin.value() >= offset_end.value()) {
-		qDebug()<< "Offsets fuera de rango";
+		//qDebug()<< "Offsets fuera de rango";
 		return;
 		}
 
@@ -528,8 +512,12 @@ std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
 	auto image = image_processor.check_colour_patch_in_image(camera360rgb_proxy, colors[room], nullptr, 1000);
 	if (std::get<0>(image))
 	{
-		qDebug()<<"El size es: "<<door_detector.doors().size();
-		num_door = (num_door + 1) % door_detector.doors().size();
+		rooms[room].my_doors=door_detector.doors(); //guardamos en esta habitacion nominal, las puertas que hay detectadas en este momento
+		for (const auto& d : door_detector.doors()) {
+
+		}
+
+		num_door = (num_door + 1) % door_detector.doors().size(); //TODO: Pensar si esto está bien
 		return {STATE::GOTO_DOOR, 0.0f, 0};
 	}
 
@@ -538,6 +526,8 @@ std::tuple<STATE, float, float> SpecificWorker::turn(const Corners &corners) {
 
 // TODO: llamar a orientarse a la puerta, y luego cruzarla ciegamente, practicamente esta
 std::tuple<STATE, float, float> SpecificWorker::goto_door(const RoboCompLidar3D::TPoints &points) {
+
+
 	std::expected<Door, std::string> doors = door_detector.get_door(num_door);
 
 	auto center = centro.estimate(points);
@@ -637,7 +627,7 @@ bool SpecificWorker::update_robot_pose(const Corners& corners, const Match& matc
 
 	// estimate new pose with pseudoinverse
 	const Eigen::Vector3d r = (W.transpose() * W).inverse() * W.transpose() * b;
-	std::cout << r << std::endl;
+
 	//qInfo() << "--------------------";
 
 	if (r.array().isNaN().any()) {

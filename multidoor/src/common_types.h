@@ -101,4 +101,6 @@ struct Door
     }
 };
 using Doors = std::vector<Door>;
+using Wall = std::tuple<Eigen::ParametrizedLine<float, 2>, int, Corner, Corner>;
+using Walls = std::vector<Wall>;
 #endif //COMMON_TYPES_H
