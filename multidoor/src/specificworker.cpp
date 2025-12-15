@@ -105,6 +105,9 @@ void SpecificWorker::initialize()
 
 		// stop robot
 		//move_robot(0, 0, 0);
+
+		//cnn
+		
 	}
 }
 

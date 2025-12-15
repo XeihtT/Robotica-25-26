@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ed3de6c2-092c-4892-a79e-86f2be08203d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/QtSettings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/editor.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/localiser.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/.qt/QtDeploySupport.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/.qt/QtDeploySupport.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeCache.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CMakeCCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CMakeCXXCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CMakeDetermineCompilerABI_C.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CMakeDetermineCompilerABI_CXX.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CMakeSystem.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CompilerIdC/CMakeCCompilerId.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CompilerIdC/a.out" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CompilerIdCXX/CMakeCXXCompilerId.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/4.1.2/CompilerIdCXX/a.out" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/CMakeConfigureLog.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/CMakeDirectoryInformation.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/CMakeRuleHashes.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/InstallScripts.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/Makefile.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/Makefile2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/TargetDirectories.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/cmake.check_cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/localiser/build/CMakeFiles/progress.marks" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multidoor/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/multidoor/Testing/Temporary/LastTest.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multidoor/bin/multidoor" beforeDir="false" afterPath="$PROJECT_DIR$/multidoor/bin/multidoor" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multidoor/src/specificworker.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/multidoor/src/specificworker.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="1001" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "FranMUex"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/XeihtT/Robotica-25-26.git",
+    "accountId": "d6d68029-7f5d-4492-8eda-a4c4dd7aa4df"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="36fA8U54KEMhcPRUbsP4gjE4O8Q" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "multiroom__helios2",
+    "last_opened_file_path": "/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ed3de6c2-092c-4892-a79e-86f2be08203d" name="Changes" comment="" />
+      <created>1765387094638</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1765387094638</updated>
+      <workItem from="1765387095670" duration="36000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

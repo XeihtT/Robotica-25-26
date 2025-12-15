@@ -1,0 +1,14 @@
+/snap/clion/405/bin/cmake/linux/x64/bin/cmake -G "Unix Makefiles" -S /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector -B /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector
+CMake Warning at CMakeLists.txt:7 (MESSAGE):
+  ROBOCOMP variable not set.  Using the default value:
+  /home/robocomp/robocomp
+
+
+-- Generating ICE files in directory: /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/generated
+-- Adding rule to generate /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/generated/Camera360RGB.ice from /home/robocomp/robocomp//interfaces/IDSLs/Camera360RGB.idsl
+-- Adding rule to generate /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/generated/Camera360RGB.ice from /home/robocomp/robocomp//interfaces/IDSLs/Camera360RGB.idsl
+-- Adding rule to generate /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/generated/MNIST.ice from /home/robocomp/robocomp//interfaces/IDSLs/MNIST.idsl
+-- Adding rule to generate /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/generated/MNIST.ice from /home/robocomp/robocomp//interfaces/IDSLs/MNIST.idsl
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/usuario/RoboticaG5/Robotica-25-26/mnist_detector

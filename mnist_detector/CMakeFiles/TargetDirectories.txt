@@ -1,0 +1,8 @@
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/CMakeFiles/ICES__home_usuario_RoboticaG5_Robotica-25-26_mnist_detector.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/CMakeFiles/ICE_Camera360RGB_target.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/CMakeFiles/ICE_MNIST_target.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/CMakeFiles/create_symlink.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/CMakeFiles/edit_cache.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/CMakeFiles/rebuild_cache.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/src/CMakeFiles/edit_cache.dir
+/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector/src/CMakeFiles/rebuild_cache.dir

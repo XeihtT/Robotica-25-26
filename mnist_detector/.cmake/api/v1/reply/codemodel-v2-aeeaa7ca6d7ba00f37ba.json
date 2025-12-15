@@ -1,0 +1,103 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"jsonFile" : "directory-.-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				},
+				{
+					"build" : "src",
+					"jsonFile" : "directory-src-b6cf2213fc5053b67c22.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src"
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "MNIST",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ICES__home_usuario_RoboticaG5_Robotica-25-26_mnist_detector::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ICES__home_usuario_RoboticaG5_Robotica-25-26_mnist_detector-7c584e4d55bf3e1a87f7.json",
+					"name" : "ICES__home_usuario_RoboticaG5_Robotica-25-26_mnist_detector",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ICE_Camera360RGB_target::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ICE_Camera360RGB_target-fe58fa6f07185a807a29.json",
+					"name" : "ICE_Camera360RGB_target",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ICE_MNIST_target::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ICE_MNIST_target-dcf004de67bb1a818cc1.json",
+					"name" : "ICE_MNIST_target",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "create_symlink::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-create_symlink-746ec7250982c5863acc.json",
+					"name" : "create_symlink",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector",
+		"source" : "/home/usuario/RoboticaG5/Robotica-25-26/mnist_detector"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}
