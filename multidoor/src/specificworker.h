@@ -88,8 +88,9 @@ public slots:
 	void new_target_slot(QPointF);
 
 	//Chocachoca
-	void draw_lidar(const RoboCompLidar3D::TPoints &filtered_points, std::optional<Eigen::Vector2d> center, QGraphicsScene *scene);
+	void draw_lidar(const RoboCompLidar3D::TPoints &filtered_points, std::optional<Eigen::Vector2f> center, QGraphicsScene *scene);
 	void draw_lidar2( QGraphicsScene *scene, int i);
+	void draw_nominal_doors(QGraphicsScene *scene, int room, int current_door);
 
 	//void draw_lidar(const RoboCompLidar3D::TPoints &filtered_points, QGraphicsScene *scene);
 
@@ -167,7 +168,7 @@ private:
 		float RELOCAL_DELTA = 5.0f * M_PI/180.f; // small probe angle in radians
 		float RELOCAL_MATCH_MAX_DIST = 2000.f;   // mm for Hungarian gating
 		float RELOCAL_DONE_COST = 500.f;
-		float RELOCAL_DONE_MATCH_MAX_ERROR = 1000.f;
+		float RELOCAL_DONE_MATCH_MAX_ERROR = 2000.f;
 	};
 	Params params;
 
@@ -192,7 +193,7 @@ private:
 	*/
 	std::vector<NominalRoom> rooms{ NominalRoom{5500.f, 4000.f}, NominalRoom{8000.f, 4000.f}};
 	//robot
-	Eigen::Affine2d robot_pose;
+	Eigen::Affine2f robot_pose;
 	//match
 	rc::Hungarian hungarian;
 
@@ -242,7 +243,7 @@ private:
 
 	STATE state = STATE::GOTO_ROOM_CENTER;
 	using RetVal = std::tuple<STATE, float, float>;
-	RetVal goto_door(const RoboCompLidar3D::TPoints &points);
+	RetVal goto_door(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene);
 	RetVal orient_to_door(const RoboCompLidar3D::TPoints &points);
 
 
@@ -256,7 +257,7 @@ private:
 
 
 	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points);
-	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, AbstractGraphicViewer *viewer);
+	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, QGraphicsScene *scene1, QGraphicsScene *scene2);
 
 	// viewer
 	AbstractGraphicViewer *viewer, *viewer_room;

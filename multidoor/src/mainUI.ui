@@ -65,9 +65,9 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_11">
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <layout class="QHBoxLayout" name="horizontalLayout_18">
          <item>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
@@ -87,6 +87,12 @@
                   <font>
                    <bold>true</bold>
                   </font>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Plain</enum>
                  </property>
                 </widget>
                </item>
@@ -108,6 +114,9 @@
                    <bold>true</bold>
                   </font>
                  </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
                 </widget>
                </item>
               </layout>
@@ -128,6 +137,9 @@
                    <bold>true</bold>
                   </font>
                  </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
                 </widget>
                </item>
               </layout>
@@ -146,7 +158,11 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLCDNumber" name="lcdNumber_adv"/>
+                <widget class="QLCDNumber" name="lcdNumber_adv">
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -160,7 +176,16 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLCDNumber" name="lcdNumber_rot"/>
+                <widget class="QLCDNumber" name="lcdNumber_rot">
+                 <property name="font">
+                  <font>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -177,6 +202,12 @@
              </item>
              <item>
               <widget class="QLabel" name="label_state">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                 <bold>true</bold>
+                </font>
+               </property>
                <property name="text">
                 <string>TextLabel</string>
                </property>
@@ -185,18 +216,41 @@
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <layout class="QHBoxLayout" name="horizontalLayout_11">
              <item>
-              <widget class="QLabel" name="label_state_name_2">
+              <widget class="QLabel" name="label_6">
                <property name="text">
-                <string>state:</string>
+                <string>localised</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_state_2">
+              <widget class="QLabel" name="label_localised">
                <property name="text">
                 <string>TextLabel</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <item>
+              <widget class="QLabel" name="label_state_name_2">
+               <property name="text">
+                <string>room</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLCDNumber" name="lcdNumber_room">
+               <property name="font">
+                <font>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
                </property>
               </widget>
              </item>

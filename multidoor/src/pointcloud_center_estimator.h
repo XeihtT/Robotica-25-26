@@ -27,33 +27,32 @@ namespace rc
             Config(){}
         };
 
-        using Point2D = Eigen::Vector2d;
         explicit PointcloudCenterEstimator(const Config &config = Config{});
 
-        std::optional<Point2D> estimate(const std::vector<Point2D>& points);
-        std::optional<Point2D> estimate(const RoboCompLidar3D::TPoints& points);
+        std::optional<Eigen::Vector2f> estimate(const std::vector<Eigen::Vector2f>& points);
+        std::optional<Eigen::Vector2f> estimate(const RoboCompLidar3D::TPoints& points);
 
     private:
         Config config_;
 
-        std::vector<Point2D> filterPoints(const std::vector<Point2D>& points);
-        std::vector<Point2D> extractBoundaryPoints(const std::vector<Point2D>& points);
-        bool isLocalMaximum(const Point2D& candidate,
-                           const std::vector<Point2D>& neighbors,
+        std::vector<Eigen::Vector2f> filterPoints(const std::vector<Eigen::Vector2f>& points);
+        std::vector<Eigen::Vector2f> extractBoundaryPoints(const std::vector<Eigen::Vector2f>& points);
+        bool isLocalMaximum(const Eigen::Vector2f& candidate,
+                           const std::vector<Eigen::Vector2f>& neighbors,
                            double threshold);
-        std::vector<Point2D> removeStatisticalOutliers(const std::vector<Point2D>& points);
-        Point2D calculateRobustCentroid(const std::vector<Point2D>& points);
-        std::vector<Point2D> computeConvexHull(const std::vector<Point2D>& points);
+        std::vector<Eigen::Vector2f> removeStatisticalOutliers(const std::vector<Eigen::Vector2f>& points);
+        Eigen::Vector2f calculateRobustCentroid(const std::vector<Eigen::Vector2f>& points);
+        std::vector<Eigen::Vector2f> computeConvexHull(const std::vector<Eigen::Vector2f>& points);
 
         struct OBB
         {
-            Point2D center{};
+            Eigen::Vector2f center{};
             double width = 0.0;
             double height = 0.0;
             double rotation = 0.0; // radians
         };
 
-        OBB computeOBB(const std::vector<Point2D>& hull);
+        OBB computeOBB(const std::vector<Eigen::Vector2f>& hull);
     };
 
 

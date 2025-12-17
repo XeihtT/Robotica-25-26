@@ -14,8 +14,8 @@ namespace rc
     PointcloudCenterEstimator::PointcloudCenterEstimator(const Config &config)
         : config_(config) {}
 
-    std::optional<PointcloudCenterEstimator::Point2D>
-    PointcloudCenterEstimator::estimate(const std::vector<Point2D>& points) {
+    std::optional<Eigen::Vector2f>
+    PointcloudCenterEstimator::estimate(const std::vector<Eigen::Vector2f>& points) {
         if (points.size() < config_.min_valid_points) {
             return std::nullopt;
         }
@@ -41,18 +41,18 @@ namespace rc
         return obb.center;
     }
 
-    std::optional<PointcloudCenterEstimator::Point2D> PointcloudCenterEstimator::estimate( const RoboCompLidar3D::TPoints &points)
+    std::optional<Eigen::Vector2f> PointcloudCenterEstimator::estimate( const RoboCompLidar3D::TPoints &points)
     {
-        std::vector<Point2D> pc;
+        std::vector<Eigen::Vector2f> pc;
         pc.reserve(points.size());
         for (const auto &p : points)
             pc.emplace_back(p.x, p.y);
         return estimate(pc);
     }
 
-    std::vector<PointcloudCenterEstimator::Point2D>
-    PointcloudCenterEstimator::filterPoints(const std::vector<Point2D>& points) {
-        std::vector<Point2D> filtered;
+    std::vector<Eigen::Vector2f>
+    PointcloudCenterEstimator::filterPoints(const std::vector<Eigen::Vector2f>& points) {
+        std::vector<Eigen::Vector2f> filtered;
         filtered.reserve(points.size());
 
         for (const auto& p : points) {
@@ -65,13 +65,13 @@ namespace rc
         return filtered;
     }
 
-    std::vector<PointcloudCenterEstimator::Point2D>
-    PointcloudCenterEstimator::extractBoundaryPoints(const std::vector<Point2D>& points) {
-        std::vector<Point2D> boundary;
+    std::vector<Eigen::Vector2f>
+    PointcloudCenterEstimator::extractBoundaryPoints(const std::vector<Eigen::Vector2f>& points) {
+        std::vector<Eigen::Vector2f> boundary;
         boundary.reserve(config_.num_sectors);
 
         const double sector_angle = 2.0 * std::numbers::pi / config_.num_sectors;
-        std::vector<std::vector<Point2D>> sectors(config_.num_sectors);
+        std::vector<std::vector<Eigen::Vector2f>> sectors(config_.num_sectors);
 
         for (const auto& p : points) {
             double angle = std::atan2(p.y(), p.x());
@@ -87,7 +87,7 @@ namespace rc
             if (sector.empty()) continue;
 
             auto farthest = std::max_element(sector.begin(), sector.end(),
-                [](const Point2D& a, const Point2D& b) {
+                [](const Eigen::Vector2f& a, const Eigen::Vector2f& b) {
                     return a.norm() < b.norm();
                 });
 
@@ -100,19 +100,19 @@ namespace rc
     }
 
     bool PointcloudCenterEstimator::isLocalMaximum(
-        const Point2D& candidate,
-        const std::vector<Point2D>& neighbors,
+        const Eigen::Vector2f& candidate,
+        const std::vector<Eigen::Vector2f>& neighbors,
         double threshold) {
         double candidate_range = candidate.norm();
 
         return std::all_of(neighbors.begin(), neighbors.end(),
-            [&](const Point2D& p) {
+            [&](const Eigen::Vector2f& p) {
                 return p.norm() <= candidate_range + threshold;
             });
     }
 
-    std::vector<PointcloudCenterEstimator::Point2D>
-    PointcloudCenterEstimator::removeStatisticalOutliers(const std::vector<Point2D>& points) {
+    std::vector<Eigen::Vector2f>
+    PointcloudCenterEstimator::removeStatisticalOutliers(const std::vector<Eigen::Vector2f>& points) {
         if (points.size() < 6) return points;
 
         const int k = 5;
@@ -139,7 +139,7 @@ namespace rc
                                           avg_distances.begin(), 0.0);
         double stdev = std::sqrt(sq_sum / avg_distances.size() - mean * mean);
 
-        std::vector<Point2D> filtered;
+        std::vector<Eigen::Vector2f> filtered;
         filtered.reserve(points.size());
 
         for (size_t i = 0; i < points.size(); ++i) {
@@ -151,8 +151,8 @@ namespace rc
         return filtered;
     }
 
-    PointcloudCenterEstimator::Point2D
-    PointcloudCenterEstimator::calculateRobustCentroid(const std::vector<Point2D>& points) {
+    Eigen::Vector2f
+    PointcloudCenterEstimator::calculateRobustCentroid(const std::vector<Eigen::Vector2f>& points) {
         std::vector<double> xs, ys;
         xs.reserve(points.size());
         ys.reserve(points.size());
@@ -171,8 +171,8 @@ namespace rc
         return {median(xs), median(ys)};
     }
 
-    std::vector<PointcloudCenterEstimator::Point2D>
-    PointcloudCenterEstimator::computeConvexHull(const std::vector<Point2D>& points) {
+    std::vector<Eigen::Vector2f>
+    PointcloudCenterEstimator::computeConvexHull(const std::vector<Eigen::Vector2f>& points) {
         if (points.size() <= 3) return points;
 
         size_t pivot_idx = 0;
@@ -183,26 +183,26 @@ namespace rc
             }
         }
 
-        Point2D pivot = points[pivot_idx];
-        std::vector<Point2D> sorted = points;
+        Eigen::Vector2f pivot = points[pivot_idx];
+        std::vector<Eigen::Vector2f> sorted = points;
 
         std::sort(sorted.begin(), sorted.end(),
-            [&pivot](const Point2D& a, const Point2D& b) {
+            [&pivot](const Eigen::Vector2f& a, const Eigen::Vector2f& b) {
                 double angle_a = std::atan2(a.y() - pivot.y(), a.x() - pivot.x());
                 double angle_b = std::atan2(b.y() - pivot.y(), b.x() - pivot.x());
                 return angle_a < angle_b;
             });
 
-        std::vector<Point2D> hull;
+        std::vector<Eigen::Vector2f> hull;
         hull.push_back(sorted[0]);
         hull.push_back(sorted[1]);
 
         for (size_t i = 2; i < sorted.size(); ++i) {
             while (hull.size() >= 2) {
-                const Point2D& b = hull.back();
-                const Point2D& a = hull[hull.size() - 2];
-                Point2D ab = b - a;
-                Point2D ac = sorted[i] - a;
+                const Eigen::Vector2f& b = hull.back();
+                const Eigen::Vector2f& a = hull[hull.size() - 2];
+                Eigen::Vector2f ab = b - a;
+                Eigen::Vector2f ac = sorted[i] - a;
 
                 double cross = ab.x() * ac.y() - ab.y() * ac.x();
 
@@ -216,12 +216,12 @@ namespace rc
     }
 
     PointcloudCenterEstimator::OBB
-    PointcloudCenterEstimator::computeOBB(const std::vector<Point2D>& hull) {
+    PointcloudCenterEstimator::computeOBB(const std::vector<Eigen::Vector2f>& hull) {
         if (hull.size() < 3) {
             auto [min_x, max_x] = std::minmax_element(hull.begin(), hull.end(),
-                [](const Point2D& a, const Point2D& b) { return a.x() < b.x(); });
+                [](const Eigen::Vector2f& a, const Eigen::Vector2f& b) { return a.x() < b.x(); });
             auto [min_y, max_y] = std::minmax_element(hull.begin(), hull.end(),
-                [](const Point2D& a, const Point2D& b) { return a.y() < b.y(); });
+                [](const Eigen::Vector2f& a, const Eigen::Vector2f& b) { return a.y() < b.y(); });
 
             return {
                 {(min_x->x() + max_x->x()) / 2.0, (min_y->y() + max_y->y()) / 2.0},
@@ -235,22 +235,22 @@ namespace rc
         OBB best_obb;
 
         for (size_t i = 0; i < hull.size(); ++i) {
-            const Point2D& p1 = hull[i];
-            const Point2D& p2 = hull[(i + 1) % hull.size()];
+            const Eigen::Vector2f& p1 = hull[i];
+            const Eigen::Vector2f& p2 = hull[(i + 1) % hull.size()];
 
             double angle = std::atan2(p2.y() - p1.y(), p2.x() - p1.x());
-            Eigen::Rotation2Dd rot(-angle);
+            Eigen::Rotation2Df rot(-angle);
 
-            std::vector<Point2D> rotated;
+            std::vector<Eigen::Vector2f> rotated;
             rotated.reserve(hull.size());
 
             for (const auto& p : hull)
                 rotated.push_back(rot * p);
 
             auto [min_x, max_x] = std::minmax_element(rotated.begin(), rotated.end(),
-                [](const Point2D& a, const Point2D& b) { return a.x() < b.x(); });
+                [](const Eigen::Vector2f& a, const Eigen::Vector2f& b) { return a.x() < b.x(); });
             auto [min_y, max_y] = std::minmax_element(rotated.begin(), rotated.end(),
-                [](const Point2D& a, const Point2D& b) { return a.y() < b.y(); });
+                [](const Eigen::Vector2f& a, const Eigen::Vector2f& b) { return a.y() < b.y(); });
 
             double width = max_x->x() - min_x->x();
             double height = max_y->y() - min_y->y();
@@ -259,7 +259,7 @@ namespace rc
             if (area < min_area) {
                 min_area = area;
 
-                Point2D center_rot((min_x->x() + max_x->x()) / 2.0,
+                Eigen::Vector2f center_rot((min_x->x() + max_x->x()) / 2.0,
                                   (min_y->y() + max_y->y()) / 2.0);
 
                 best_obb.center = rot.inverse() * center_rot;
