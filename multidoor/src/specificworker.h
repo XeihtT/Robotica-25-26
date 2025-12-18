@@ -58,6 +58,7 @@
 #include "image_processor.h"
 #include "nominal_room.h"
 #include "pointcloud_center_estimator.h"
+#include "door_crossing_tracker.h"
 /**
  * \brief Class SpecificWorker implements the core functionality of the component.
  */
@@ -132,8 +133,9 @@ private:
 	//Random nums:
 	std::random_device rd;
 	std::mt19937 gen;
-	std::uniform_real_distribution<float> rand;
+	//std::uniform_real_distribution<float> rand;
 	std::uniform_int_distribution<int> rand_turn_way;
+	std::uniform_int_distribution<int> rand_door;
 
 	//params
 	struct Params
@@ -169,6 +171,7 @@ private:
 		float RELOCAL_MATCH_MAX_DIST = 2000.f;   // mm for Hungarian gating
 		float RELOCAL_DONE_COST = 500.f;
 		float RELOCAL_DONE_MATCH_MAX_ERROR = 2000.f;
+		float RELOCAL_MAX_ORIENTED_ERROR = 0.05f;
 	};
 	Params params;
 
@@ -176,6 +179,8 @@ private:
 
 	//room
 	int room = 0;
+	int current_door = 0;
+
 	rc::Room_Detector room_detector;
 	/*
 	NominalRoom rooms[2] = {
@@ -205,8 +210,8 @@ private:
 
 	// doors
 	DoorDetector door_detector;
-	int num_door = 0;
 	rc::PointcloudCenterEstimator centro;
+	DoorCrossing door_crossing; // used the file en beta-robotica-class
 	// image processor
 	rc::ImageProcessor image_processor;
 
@@ -217,7 +222,12 @@ private:
 	bool relocal_centered = false;
 	bool localised = false;
 
-	bool update_robot_pose(const Corners &corners, const Match &match);
+	std::optional<std::pair<Eigen::Affine2f, float>> update_robot_pose(int room_index,
+																  const Corners &corners,
+																  const Eigen::Affine2f &r_pose,
+																  bool transform_corners);
+
+
 	void move_robot(float adv, float rot, float max_match_error);
 	Eigen::Vector3d solve_pose(const Corners &corners, const Match &match);
 	void predict_robot_pose();
@@ -257,8 +267,8 @@ private:
 
 
 	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points);
-	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, const Match &match, QGraphicsScene *scene1, QGraphicsScene *scene2);
-
+	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, QGraphicsScene *scene1, QGraphicsScene *scene2);
+	RetVal localise(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene);
 	// viewer
 	AbstractGraphicViewer *viewer, *viewer_room;
 	QGraphicsPolygonItem *robot_draw, *robot_room_draw;
@@ -282,7 +292,7 @@ private:
 	RoboCompLidar3D::TPoints filter_isolated_points(const RoboCompLidar3D::TPoints &points, float d);
 	void update_robot_position();
 	RoboCompLidar3D::TPoints filtro_datos();
-
+	int choose_next_door(int room);
 	std::expected<int, std::string> closest_lidar_index_to_given_angle(const auto &points, float angle);
 
 
