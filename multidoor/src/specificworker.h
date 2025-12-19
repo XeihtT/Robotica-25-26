@@ -268,7 +268,7 @@ private:
 
 	RetVal goto_room_center(const RoboCompLidar3D::TPoints &points);
 	RetVal process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, QGraphicsScene *scene1, QGraphicsScene *scene2);
-	RetVal localise(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene);
+	RetVal localise(const RoboCompLidar3D::TPoints &points);
 	// viewer
 	AbstractGraphicViewer *viewer, *viewer_room;
 	QGraphicsPolygonItem *robot_draw, *robot_room_draw;

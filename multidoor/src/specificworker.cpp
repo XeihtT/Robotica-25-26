@@ -102,7 +102,7 @@ void SpecificWorker::initialize()
 		plotConfig.yMax = 1000;
 		time_series_plotter = std::make_unique<TimeSeriesPlotter>(frame_plot_error, plotConfig);
 		match_error_graph = time_series_plotter->addGraph("", Qt::blue);
-
+		srand(time(NULL));
 
 		// stop robot
 		//move_robot(0, 0, 0);
@@ -121,7 +121,7 @@ void SpecificWorker::compute()
     //const auto center_opt = room_detector.estimate_center_from_walls(lines);
     const auto center_opt = centro.estimate(data);
     draw_lidar(data, center_opt, &viewer->scene);
-
+	Match match;
     // Predict robot pose using odometry
     //predict_robot_pose();
 
@@ -129,7 +129,7 @@ void SpecificWorker::compute()
     float max_match_error = 99999.f;
 	if (localised)
 	{
-		if (const auto res = update_robot_pose(room, corners, robot_pose, true); res.has_value())
+		if (const auto res = update_robot_pose(room, corners, robot_pose, true); res.has_value()) //Despues de este if, match esta inicializado
 		{
 			robot_pose = res.value().first;
 			max_match_error = res.value().second;
@@ -193,11 +193,10 @@ std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLida
 		case STATE::CROSS_DOOR:
 			result = cross_door(data);
 			break;
-			/*
-		case STATE::LOCALISE: //nose que es este estado xd
-			result = localise(match);
+		case STATE::LOCALISE:
+			result = localise(data);
 			break;
-			*/
+
 		default:
 			break;
 	}
@@ -359,7 +358,6 @@ void SpecificWorker::draw_lidar2(QGraphicsScene *scene, int i)
 	}
 	room_items.clear();
 	room_items.push_back(scene->addRect(rooms[i].rect(), QPen(Qt::black, 30)));
-
 }
 
 void SpecificWorker::draw_nominal_doors(QGraphicsScene *scene, int room, int current_door) {
@@ -369,6 +367,7 @@ void SpecificWorker::draw_nominal_doors(QGraphicsScene *scene, int room, int cur
 		delete i;
 	}
 	door_items.clear();
+	qDebug()<<room;
 	for (auto d: rooms[room].doors) {
 		qDebug()<<"DIBUJO EL PICO 1 NOMINAL: "<<d.p1_global.x()<<"///"<<d.p1_global.y();
 		qDebug()<<"DIBUJO EL PICO 2 NOMINAL: "<<d.p2_global.x()<<"///"<<d.p2_global.y();
@@ -471,13 +470,20 @@ SpecificWorker::RetVal SpecificWorker::goto_room_center(const RoboCompLidar3D::T
 {
 	auto center = centro.estimate(points);
 	STATE s;
+	//qDebug()<<"Estoy en la habitación: "<<room;
 	if (!center.has_value())
 		return{STATE::GOTO_ROOM_CENTER, 0, 0}; //devuelvo el mismo estado pero sin cambiar nada para que en la proxima iteracion si pille el centro
 		//igualmente es necesario upgradear el estimador del centro
 
 	if (center->norm() < 100.0f) {
 		//el problema esta aqui
-		s= rooms[room].visited ? STATE::GOTO_DOOR : STATE::TURN;
+
+		//s= rooms[room].visited ? STATE::GOTO_DOOR : STATE::TURN;
+		//s= rooms[room].already_crossed ? STATE::TURN : STATE::GOTO_DOOR;
+		//s = door_crossing.entering_door_index != -1 ?
+		//current_door = choose_next_door(room);
+		//s = rooms[door_crossing.leaving_door_index].already_visited_door ? STATE::GOTO_DOOR : STATE::TURN; //TODO: Sigue fallando, no hace el turn cuando debe
+		s = localised ? STATE::GOTO_DOOR : STATE::TURN;
 		return {s, 0, 0};
 	}
 
@@ -488,6 +494,7 @@ SpecificWorker::RetVal SpecificWorker::goto_room_center(const RoboCompLidar3D::T
 	auto [v, w] = robot_controller(center_f);
 
 	// 4. Devolver estado, avance y rotación
+	door_crossing.track_entering_door(door_detector.doors());
 	return {STATE::GOTO_ROOM_CENTER, v, w};
 
 }
@@ -531,12 +538,13 @@ SpecificWorker::RetVal SpecificWorker::turn(const Corners &corners){
 	   if (success)
 	   {
 	       room = room_index;
+
 	   		qDebug()<<"El indice de habitacion obtenido en el image proc es: "<<room;
 	       // update robot pose to have a fresh value
 	       if (const auto res = update_robot_pose(room, corners, robot_pose, false); res.has_value())
 	           robot_pose = res.value().first;
 	       else return{STATE::TURN, 0.0f, left_right*params.RELOCAL_ROT_SPEED/2};
-
+//TODO: LEAVING DOOR
 
 	       ///////////////////////////////////////////////////////////////////////
 	/// save doors to nominal_room if not previously visited
@@ -568,22 +576,30 @@ SpecificWorker::RetVal SpecificWorker::turn(const Corners &corners){
 	       }
 	       // ///////////////////////////////////////////////////////////////////////////
 	// // finish door tracking and update door crossing info
-	       // ///////////////////////////////////////////////////////////////////////////
-	if (door_crossing.valid)
+	       // //////////////////////////////////////////////////////////////////////////
+	//bool first_cond = (door_crossing.leaving_door_index != -1) && (door_crossing.entering_door_index != -1);
+	//bool second_cond = (door_crossing.leaving_room_index != -1) && (door_crossing.entering_room_index != -1);
+	//door_crossing.valid = first_cond && second_cond; //TODO: IGUAL HAY QUE QUITAR ESTO
+	door_crossing.set_entering_data(room, rooms);
+	bool cond = (door_crossing.leaving_door_index != -1) && (door_crossing.leaving_room_index != -1);
+	if (door_crossing.valid && cond) //TODO: nose si es necesaria la condicion extra
 	{
-	           door_crossing.set_entering_data(room, rooms);
+		       qDebug()<<"Los indices de leaving son: "<<door_crossing.leaving_room_index<<" y: "<<door_crossing.leaving_door_index;
 	           rooms[door_crossing.leaving_room_index].doors[door_crossing.leaving_door_index].connects_to_door = door_crossing.entering_door_index;
 	           rooms[door_crossing.leaving_room_index].doors[door_crossing.leaving_door_index].connects_to_room = door_crossing.entering_room_index;
 	           rooms[room].doors[door_crossing.entering_door_index].visited = true;
 	           rooms[room].doors[door_crossing.entering_door_index].connects_to_door = door_crossing.leaving_door_index;
 	           rooms[room].doors[door_crossing.entering_door_index].connects_to_room = door_crossing.leaving_room_index;
-	           door_crossing.valid = false;
+	           door_crossing.valid = false; //TODO: ¿?
 		qDebug()<<"La habitación de antes: "<<door_crossing.leaving_room_index<<" tiene la puerta: "<<door_crossing.leaving_door_index<<" que conecta con la puerta: "<<door_crossing.entering_door_index;
 		qDebug()<<"La habitación de antes: "<<door_crossing.leaving_room_index<<" tiene la puerta: "<<door_crossing.leaving_door_index<<" que conecta con la habitación: "<<door_crossing.entering_room_index;
 		qDebug()<<"La habitación siguiente: "<<room<<" tiene la puerta: "<<door_crossing.entering_door_index<<" que conecta con la puerta: "<<door_crossing.leaving_door_index;
 		qDebug()<<"La habitación siguiente: "<<room<<" tiene la puerta: "<<door_crossing.entering_door_index<<" que conecta con la habitación: "<<door_crossing.leaving_room_index;
 
 	       }
+	   	else {
+	   		qDebug()<<"door_crossing no es valid";
+	   	}
 	   	   draw_lidar2(&viewer_room->scene, room);
 	   	   draw_nominal_doors(&viewer_room->scene, room, current_door);
 	       localised = true;
@@ -645,15 +661,17 @@ SpecificWorker::RetVal SpecificWorker::goto_door(const RoboCompLidar3D::TPoints 
 
     //qInfo() << __FUNCTION__ << "moving to door at " << target.x() << "," << target.y() << " dist: " << dist_to_door;
     const auto &[adv, rot] = robot_controller(target); // go to first detected door
+	//qDebug()<<"Llamada a track_entering_door";
 	door_crossing.track_entering_door(door_detector.doors());
     return {STATE::GOTO_DOOR, adv, rot};
 }
 
 
 SpecificWorker::RetVal SpecificWorker::orient_to_door(const RoboCompLidar3D::TPoints &points)
-{
+{ //TODO: Llamada a set_leaving_data
 	// data
 	const auto doors = door_detector.doors();
+	door_crossing.set_leaving_data(room, rooms);
 	if (localised)
 	{
 		const auto dn = rooms[room].doors[current_door];
@@ -702,24 +720,19 @@ SpecificWorker::RetVal SpecificWorker::cross_door(const RoboCompLidar3D::TPoints
        {
            first_time = true;
            const auto &leaving_door = rooms[room].doors[current_door];
-           int next_room_idx = leaving_door.connects_to_room;
+           int next_room_idx = leaving_door.connects_to_room; //TODO: connects_to_room no está inicializado
+
            // if entering known room, relocalise the robot
+       		qDebug()<<"Antes del if de cross door, el next_room_idx es: "<<next_room_idx;
            if (next_room_idx >= 0 and rooms[next_room_idx].visited)
            {
-               //qInfo() << __FUNCTION__ << "Entering known room " << next_room_idx << ". Skipping LOCALISE.";
+           		int next_door_idx = leaving_door.connects_to_door;
+				room = next_room_idx;
+           		qDebug()<<"La siguiente habitación es: "<<room;
+           		current_door = next_door_idx;
 
-
-               // Update indices to the new room
-           		//entiendo que no apunta a la misma desde la otra habitacion sino a otra puerta
-               int next_door_idx = leaving_door.connects_to_door; //está cogiendo la misma puerta, pero mirada desde la otra habitación
-               if (rooms[next_room_idx].doors[next_door_idx].visited) {
-               	qDebug()<<"La puerta escogida de la puerta a la que voy está visitada ya así que escojo otra";
-               	next_door_idx=choose_next_door(next_room_idx);
-               }
-               room = next_room_idx;
-           		qDebug()<<"En cross door, estoy cruzando a la habitación: "<<room;
-               current_door = next_door_idx;
-
+           		//TODO: Esto es mio, igual esta mal
+				//door_crossing.entering_door_index = next_door_idx;
 
                // Compute robot pose based on the door in the new room frame.
                const auto &entering_door = rooms[room].doors[current_door]; // door we are entering now
@@ -736,28 +749,29 @@ SpecificWorker::RetVal SpecificWorker::cross_door(const RoboCompLidar3D::TPoints
                //qInfo() << __FUNCTION__ << "Robot localised in NEW room " << current_room << " at door " << current_door;
                std::cout << door_center.x() << " " << door_center.y() << " " << angle << std::endl;
 
-
-
-				//TODO: si la habitacion a la que voy esta visitada, goto door
-
+				//antes de devolver, tengo que asignar next room a room
                localised = true;
                // Continue navigation in the new room
-               return {STATE::GOTO_ROOM_CENTER, 0.f, 0.f}; //TODO: EL PROBLEMA ES QUE SE QUEDA EN BUCLE Y NO VA AL CENTRO
+               return {STATE::GOTO_ROOM_CENTER, 0.f, 0.f};
            }
            else // Unknown room. I need to store the door index of the current door and start tracking the just crossed door,
            {
+				//TODO: Falta inicializar room_idx a distinto de -1, y los demas valores de leaving / entering a distinto de -1
                door_crossing = DoorCrossing{room, current_door};
                rooms[room].doors[current_door].visited = true; // exiting door
                // from here it must be updated until localisation is achieved again
-               return {STATE::GOTO_ROOM_CENTER, 0.f, 0.f}; //TODO: antes en localise
+               return {STATE::LOCALISE, 0.f, 0.f}; //TODO: antes en goto_room_center
            }
        }
-       else // keep crossing
-           return {STATE::CROSS_DOOR, 500.f, 0.f};
+       else{
+       	door_crossing.leaving_room_index = room;
+       	return {STATE::CROSS_DOOR, 500.f, 0.f};
+       }
+
    }
 }
 
-SpecificWorker::RetVal SpecificWorker::localise(const RoboCompLidar3D::TPoints &points, QGraphicsScene *scene)
+SpecificWorker::RetVal SpecificWorker::localise(const RoboCompLidar3D::TPoints &points)
 {
 	// initialise robot pose at origin. Necessary to reser pose accumulation
 	robot_pose.setIdentity();
@@ -845,7 +859,7 @@ int SpecificWorker::choose_next_door(int room) {
 	bool primera=true;
 
 	while (primera || rooms[room].doors[toReturn].visited){
-		toReturn = rand()%rooms[room].doors.size();
+		toReturn = rand_door(gen)%rooms[room].doors.size(); //TODO: rand devuelve un float y da excepcion
 		primera = false;
 	}
 

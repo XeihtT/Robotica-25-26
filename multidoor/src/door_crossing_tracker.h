@@ -42,6 +42,25 @@
                 const auto closest_door = std::ranges::min_element(nominal_doors, [this](const auto &a, const auto &b)
                 { return (a.center_global() - leaving_door_center).norm() < (b.center_global() - leaving_door_center).norm(); });
                 entering_door_index = static_cast<int>(std::distance(nominal_doors.begin(), closest_door));
+                qDebug()<<"Los index calculados son: "<<entering_room_index<<" y: "<<entering_door_index;
+                valid = true;
             }
+            void set_leaving_data(int room_index, const std::vector<NominalRoom> &nom_rooms) {
+                leaving_room_index = room_index;
+                // find the door in nominal_rooms[room_index] whose center is closest to leaving_door_center transformed to global
+                const auto &nominal_doors = nom_rooms[room_index].doors;
+                if (nominal_doors.empty())
+                {
+                    qWarning() << __FUNCTION__ << "empty nominal doors for room" << room_index;
+                    return;
+                }
+                const auto closest_door = std::ranges::min_element(nominal_doors, [this](const auto &a, const auto &b)
+                { return (a.center_global() - leaving_door_center).norm() < (b.center_global() - leaving_door_center).norm(); });
+                leaving_door_index = static_cast<int>(std::distance(nominal_doors.begin(), closest_door));
+                qDebug()<<"Los index calculados en el set_leaving son: "<<leaving_room_index<<" y: "<<leaving_door_index;
+                valid = true; //TODO: ¿?
+            }
+
+
         };
 #endif //LOCALISER_DOOR_CROSSING_TRACKER_H
