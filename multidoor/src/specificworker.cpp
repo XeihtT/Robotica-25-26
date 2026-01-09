@@ -171,6 +171,8 @@ void SpecificWorker::compute()
     lcdNumber_room->display(room);
     lcdNumber_angle->display(angle);
     last_time = std::chrono::high_resolution_clock::now();;
+
+
 }
 std::tuple<STATE, float, float> SpecificWorker::process_state(const RoboCompLidar3D::TPoints &data, const Corners &corners, QGraphicsScene *scene1, QGraphicsScene *scene2){
 
@@ -534,79 +536,85 @@ SpecificWorker::RetVal SpecificWorker::turn(const Corners &corners){
 	//////////////////////////////////////////////////////////////////
 	   // check for colour patch in image
 	   /////////////////////////////////////////////////////////////////
-	const auto &[success, room_index, left_right] = image_processor.check_colour_patch_in_image(camera360rgb_proxy, this->label_img);
-	   if (success)
-	   {
-	       room = room_index;
 
-	   		qDebug()<<"El indice de habitacion obtenido en el image proc es: "<<room;
+	RoboCompMNIST::Response resp = this->mnist_proxy->getNumber();
+
+	qDebug()<<"El index detectado es: "<<resp.number;
+	qDebug()<<"La coord x del centro del cuadro es: "<<resp.x;
+
+	if (std::abs(resp.x - 960) >= 20) { //Considero que he llegado al centro con un error de 20 píxeles
+		return {STATE::TURN, 0.0f, params.RELOCAL_ROT_SPEED}; //Sigo girando si no estoy alineado
+	}
+
+	//const auto &[success, room_index, left_right] = image_processor.check_colour_patch_in_image(camera360rgb_proxy, this->label_img);
+
+	//Una vez dejo de girar, puedo hacer el resto del algoritmo como siempre
+	room = resp.number;
+
+	qDebug()<<"El indice de habitacion obtenido en el image proc es: "<<room;
 	       // update robot pose to have a fresh value
-	       if (const auto res = update_robot_pose(room, corners, robot_pose, false); res.has_value())
-	           robot_pose = res.value().first;
-	       else return{STATE::TURN, 0.0f, left_right*params.RELOCAL_ROT_SPEED/2};
-//TODO: LEAVING DOOR
+	if (const auto res = update_robot_pose(room, corners, robot_pose, false); res.has_value())
+		robot_pose = res.value().first;
+	else return{STATE::TURN, 0.0f, params.RELOCAL_ROT_SPEED/2};
+
 
 	       ///////////////////////////////////////////////////////////////////////
 	/// save doors to nominal_room if not previously visited
 	       ///////////////////////////////////////////////////////////////////////////
 	if (not rooms[room].visited)
 	{
-	           rooms[room].name = image_processor.room_name_from_index(room);
-	           auto doors = door_detector.doors();
-	           if (doors.empty()) { qWarning() << __FUNCTION__ << "empty doors"; return{STATE::TURN, 0.0f, left_right*params.RELOCAL_ROT_SPEED};}
-	           for (auto &d : doors)
-	           {
-	               d.p1_global = rooms[room].get_projection_of_point_on_closest_wall(robot_pose * d.p1);
-	               d.p2_global = rooms[room].get_projection_of_point_on_closest_wall(robot_pose * d.p2);
-	           }
-	           rooms[room].doors = doors;
-	           // choose door to go
-	           current_door = choose_next_door(room); //TODO: Metodo que lo calcule de forma aleatoria
-	           // we need to match the current selected nominal door to the successive local doors detected during the approach
-	           // select the local door closest to the selected nominal door
-	           const auto dn = rooms[room].doors[current_door];
-	           const auto ds = door_detector.doors();
-	           const auto sd = std::ranges::min_element(ds, [dn, this](const auto &a, const auto &b)
-	                   {  return (a.center() - robot_pose.inverse() * dn.center_global()).norm() <
-	                             (b.center() - robot_pose.inverse() * dn.center_global()).norm(); });
-	           // sd is the closest local door to the selected nominal door. Update nominal door with local values
-	           rooms[room].doors[current_door].p1 = sd->p1;
-	           rooms[room].doors[current_door].p2 = sd->p2;
-	           rooms[room].visited = true;
-	       }
-	       // ///////////////////////////////////////////////////////////////////////////
-	// // finish door tracking and update door crossing info
-	       // //////////////////////////////////////////////////////////////////////////
-	//bool first_cond = (door_crossing.leaving_door_index != -1) && (door_crossing.entering_door_index != -1);
-	//bool second_cond = (door_crossing.leaving_room_index != -1) && (door_crossing.entering_room_index != -1);
+		rooms[room].name = image_processor.room_name_from_index(room);
+		auto doors = door_detector.doors();
+		if (doors.empty()) { qWarning() << __FUNCTION__ << "empty doors"; return{STATE::TURN, 0.0f, params.RELOCAL_ROT_SPEED};}
+		for (auto &d : doors)
+		{
+			d.p1_global = rooms[room].get_projection_of_point_on_closest_wall(robot_pose * d.p1);
+			d.p2_global = rooms[room].get_projection_of_point_on_closest_wall(robot_pose * d.p2);
+		}
+		rooms[room].doors = doors;
+		// choose door to go
+		current_door = choose_next_door(room); //TODO: Metodo que lo calcule de forma aleatoria
+		// we need to match the current selected nominal door to the successive local doors detected during the approach
+		// select the local door closest to the selected nominal door
+		const auto dn = rooms[room].doors[current_door];
+		const auto ds = door_detector.doors();
+		const auto sd = std::ranges::min_element(ds, [dn, this](const auto &a, const auto &b)
+		{  return (a.center() - robot_pose.inverse() * dn.center_global()).norm() <
+			(b.center() - robot_pose.inverse() * dn.center_global()).norm(); });
+		// sd is the closest local door to the selected nominal door. Update nominal door with local values
+		rooms[room].doors[current_door].p1 = sd->p1;
+		rooms[room].doors[current_door].p2 = sd->p2;
+		rooms[room].visited = true;
+	}
 	//door_crossing.valid = first_cond && second_cond; //TODO: IGUAL HAY QUE QUITAR ESTO
 	door_crossing.set_entering_data(room, rooms);
 	bool cond = (door_crossing.leaving_door_index != -1) && (door_crossing.leaving_room_index != -1);
 	if (door_crossing.valid && cond) //TODO: nose si es necesaria la condicion extra
 	{
-		       qDebug()<<"Los indices de leaving son: "<<door_crossing.leaving_room_index<<" y: "<<door_crossing.leaving_door_index;
-	           rooms[door_crossing.leaving_room_index].doors[door_crossing.leaving_door_index].connects_to_door = door_crossing.entering_door_index;
-	           rooms[door_crossing.leaving_room_index].doors[door_crossing.leaving_door_index].connects_to_room = door_crossing.entering_room_index;
-	           rooms[room].doors[door_crossing.entering_door_index].visited = true;
-	           rooms[room].doors[door_crossing.entering_door_index].connects_to_door = door_crossing.leaving_door_index;
-	           rooms[room].doors[door_crossing.entering_door_index].connects_to_room = door_crossing.leaving_room_index;
-	           door_crossing.valid = false; //TODO: ¿?
+		qDebug()<<"Los indices de leaving son: "<<door_crossing.leaving_room_index<<" y: "<<door_crossing.leaving_door_index;
+		rooms[door_crossing.leaving_room_index].doors[door_crossing.leaving_door_index].connects_to_door = door_crossing.entering_door_index;
+		rooms[door_crossing.leaving_room_index].doors[door_crossing.leaving_door_index].connects_to_room = door_crossing.entering_room_index;
+		rooms[room].doors[door_crossing.entering_door_index].visited = true;
+		rooms[room].doors[door_crossing.entering_door_index].connects_to_door = door_crossing.leaving_door_index;
+		rooms[room].doors[door_crossing.entering_door_index].connects_to_room = door_crossing.leaving_room_index;
+		door_crossing.valid = false; //TODO: ¿?
 		qDebug()<<"La habitación de antes: "<<door_crossing.leaving_room_index<<" tiene la puerta: "<<door_crossing.leaving_door_index<<" que conecta con la puerta: "<<door_crossing.entering_door_index;
 		qDebug()<<"La habitación de antes: "<<door_crossing.leaving_room_index<<" tiene la puerta: "<<door_crossing.leaving_door_index<<" que conecta con la habitación: "<<door_crossing.entering_room_index;
 		qDebug()<<"La habitación siguiente: "<<room<<" tiene la puerta: "<<door_crossing.entering_door_index<<" que conecta con la puerta: "<<door_crossing.leaving_door_index;
 		qDebug()<<"La habitación siguiente: "<<room<<" tiene la puerta: "<<door_crossing.entering_door_index<<" que conecta con la habitación: "<<door_crossing.leaving_room_index;
 
-	       }
-	   	else {
-	   		qDebug()<<"door_crossing no es valid";
-	   	}
-	   	   draw_lidar2(&viewer_room->scene, room);
-	   	   draw_nominal_doors(&viewer_room->scene, room, current_door);
-	       localised = true;
-	       return {STATE::GOTO_DOOR, 0.0f, 0.0f};  // SUCCESS
-	   }
+	}
+	else {
+		qDebug()<<"door_crossing no es valid";
+	}
+		qDebug()<<"llegooooooooooooooooooooooooooooooooooo";
+		draw_lidar2(&viewer_room->scene, room);
+		draw_nominal_doors(&viewer_room->scene, room, current_door);
+		localised = true;
+		return {STATE::GOTO_DOOR, 0.0f, 0.0f};  // SUCCESS
+
 	   // continue turning
-	   return {STATE::TURN, 0.0f, left_right*params.RELOCAL_ROT_SPEED};
+	   return {STATE::TURN, 0.0f, params.RELOCAL_ROT_SPEED};
 	}
 
 
@@ -726,6 +734,10 @@ SpecificWorker::RetVal SpecificWorker::cross_door(const RoboCompLidar3D::TPoints
        		qDebug()<<"Antes del if de cross door, el next_room_idx es: "<<next_room_idx;
            if (next_room_idx >= 0 and rooms[next_room_idx].visited)
            {
+
+				draw_lidar2(&viewer_room->scene, next_room_idx);
+           		draw_nominal_doors(&viewer_room->scene, next_room_idx, current_door);
+
            		int next_door_idx = leaving_door.connects_to_door;
 				room = next_room_idx;
            		qDebug()<<"La siguiente habitación es: "<<room;

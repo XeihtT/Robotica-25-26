@@ -222,6 +222,7 @@ private:
 	bool relocal_centered = false;
 	bool localised = false;
 
+
 	std::optional<std::pair<Eigen::Affine2f, float>> update_robot_pose(int room_index,
 																  const Corners &corners,
 																  const Eigen::Affine2f &r_pose,
