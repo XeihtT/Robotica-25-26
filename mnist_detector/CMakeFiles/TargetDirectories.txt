@@ -1,0 +1,8 @@
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/CMakeFiles/ICES__home_xeihtt_robocomp_components_beta-robotica-class_mnist_detector.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/CMakeFiles/ICE_Camera360RGB_target.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/CMakeFiles/ICE_MNIST_target.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/CMakeFiles/create_symlink.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/CMakeFiles/edit_cache.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/CMakeFiles/rebuild_cache.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/src/CMakeFiles/edit_cache.dir
+/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/src/CMakeFiles/rebuild_cache.dir

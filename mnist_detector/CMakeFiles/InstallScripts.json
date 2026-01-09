@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/cmake_install.cmake",
+		"/home/xeihtt/robocomp/components/beta-robotica-class/mnist_detector/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
